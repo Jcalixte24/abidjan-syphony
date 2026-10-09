@@ -1090,8 +1090,6 @@ document.getElementById('listen').addEventListener('click', () => setSound(!AU.o
     setTimeout(() => cur.classList.add('gone'), 1700);
   }
   if (REDUCE) { cur.classList.add('gone'); root.classList.add('ready'); return; }
-  let seen=false;try{seen=sessionStorage.getItem('rideau')==='1';sessionStorage.setItem('rideau','1')}catch(e){}
-  if (seen) { cur.classList.add('gone'); root.classList.add('ready'); return; }
   cur.addEventListener('click', open);
   addEventListener('keydown', open, {once:true});
   addEventListener('load', () => setTimeout(open, 600));
