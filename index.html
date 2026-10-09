@@ -111,11 +111,11 @@ h3{font-family:var(--disp);font-weight:450;letter-spacing:-.012em;line-height:1.
 #curtain .cur{position:absolute;top:0;bottom:0;width:50.5%;transition:transform 1.5s var(--ease-io),opacity .6s 1.1s;
   background:
     linear-gradient(180deg,rgba(0,0,0,.45),transparent 22%,transparent 72%,rgba(0,0,0,.6)),
-    repeating-linear-gradient(90deg,#170C07 0,#6B3A22 2.1vw,#3F2216 3.4vw,#8A4B2A 4.6vw,#1E120C 6.4vw)}
+    repeating-linear-gradient(90deg,#3d0715 0,#7a142f 2.1vw,#5a0d22 3.4vw,#9b2442 4.6vw,#4a0a1b 6.4vw)}
 #curtain .l{left:0;transform-origin:0 50%}
 #curtain .r{right:0;transform-origin:100% 50%}
 #curtain .valance{position:absolute;inset:0 0 auto 0;height:13vh;min-height:70px;z-index:2;transition:transform 1.2s .3s var(--ease-io);
-  background:radial-gradient(60px 26px at 50% 100%,transparent 96%,#1E120C) 0 0/120px 100%,linear-gradient(#0F0805,#3F2216)}
+  background:radial-gradient(60px 26px at 50% 100%,transparent 96%,#4a0a1b) 0 0/120px 100%,linear-gradient(#2b0510,#5a0d22)}
 #curtain .valance::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:8px;background:repeating-linear-gradient(90deg,var(--or) 0 3px,transparent 3px 7px);opacity:.75}
 #curtain .cur-t{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:1rem;transition:opacity .5s,transform .8s var(--ease)}
 #curtain .cur-t span{font-family:var(--mono);font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;color:var(--or-doux);opacity:0;animation:fadeUp .8s .15s forwards}
@@ -179,12 +179,12 @@ h3{font-family:var(--disp);font-weight:450;letter-spacing:-.012em;line-height:1.
 @keyframes spin{to{transform:rotate(360deg)}}
 .big-date{position:absolute;right:-2vw;bottom:14vh;z-index:-1;font-family:var(--disp);font-weight:300;font-size:clamp(9rem,30vw,28rem);line-height:.8;letter-spacing:-.06em;color:transparent;-webkit-text-stroke:1px rgba(224,161,90,.16);user-select:none;pointer-events:none}
 .hero-top{padding-top:clamp(.4rem,3vh,2.4rem)}
-.hero h1{font-family:var(--disp);font-weight:400;font-size:clamp(3.5rem,13.4vw,12.8rem);line-height:.88;letter-spacing:-.045em}
+.hero h1{font-family:var(--disp);font-weight:400;font-size:clamp(2.5rem,9.4vw,8.4rem);line-height:.88;letter-spacing:-.045em}
 .hero h1 .ln{display:block;overflow:hidden;padding-bottom:.12em;margin-bottom:-.12em}
 .hero h1 .ln>span{display:block;transform:translateY(110%)}
 .ready .hero h1 .ln>span{animation:rise 1.3s var(--ease) forwards}
 .ready .hero h1 .ln:nth-child(2)>span{animation-delay:.14s}
-.hero h1 .ln:nth-child(2){padding-left:clamp(1.5rem,9vw,9rem)}
+.hero h1 .ln:nth-child(2){padding-left:clamp(.75rem,5vw,5.5rem)}
 @keyframes rise{to{transform:none}}
 .hero-sub{margin-top:clamp(1rem,2.4vw,1.8rem);display:flex;gap:1.2rem;align-items:baseline;flex-wrap:wrap;opacity:0}
 .ready .hero-sub{animation:fade 1s .7s forwards}
@@ -530,6 +530,21 @@ footer{background:#0F0805;padding:clamp(4rem,8vw,6.5rem) 0 2rem;border-top:1px s
   .tc div{min-width:2.7rem}
   .projector{display:none}
 }
+/* garde-fous : aucune colonne de grille ne doit élargir la page */
+.projet-top>*,.duo>*,.mc-grid>*,.cine-head>*,.films>*,.orch>*,.res-g>*,.lieu-g>*,.hero-bot>*,.stats-g>*{min-width:0}
+@media (max-width:620px){
+  .pg header span:last-child{display:none}
+  .pg{padding:8px 6px 10px}
+}
+@media (max-width:400px){
+  .nav-in{gap:.5rem}
+  .nav-r{gap:.35rem}
+  .brand{font-size:1rem;gap:.5rem}
+  .brand svg{width:26px;height:26px}
+  .snd{padding:0 .75rem}
+  .tc div{min-width:2.4rem}
+  .t-rows{grid-template-columns:1fr}
+}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
@@ -541,7 +556,7 @@ footer{background:#0F0805;padding:clamp(4rem,8vw,6.5rem) 0 2rem;border-top:1px s
 }
 /* ============ TYPO LE MIRI (Montserrat + Open Sans) ============ */
 h1,h2,h3,.hero h1{font-family:var(--disp)}
-.hero h1{font-weight:800;letter-spacing:-.035em;line-height:.92}
+.hero h1{font-weight:800;letter-spacing:-.03em;line-height:.95;max-width:100%}
 h2{font-weight:800;letter-spacing:-.02em;line-height:1.08}
 h3{font-weight:700;letter-spacing:-.01em}
 h1 em,h2 em,h3 em,.brand em,.t-title em,#curtain .cur-t strong em{font-style:italic;font-weight:700;color:var(--or)}
