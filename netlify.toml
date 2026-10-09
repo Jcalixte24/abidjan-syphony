@@ -1,0 +1,52 @@
+# netlify.toml — production config for a pure static site (no build).
+# Drop at the repo root.
+
+[build]
+  publish = "."
+  command = ""
+
+# ─── Security headers — all pages ───
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# ─── HTML: always fresh ───
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# ─── JS/CSS: cache a day ───
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# ─── Images: cache a week ───
+[[headers]]
+  for = "/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+# ─── Redirects ───
+# Enable when the CMS module is present:
+# [[redirects]]
+#   from = "/admin"
+#   to   = "/admin/index.html"
+#   status = 200
+
+# Optional SPA-style soft-404 fallback (omit for true multi-page sites that
+# want real 404s):
+# [[redirects]]
+#   from = "/*"
+#   to   = "/index.html"
+#   status = 200
