@@ -923,6 +923,7 @@ h1 em,h2 em,h3 em,.brand em,.t-title em,#curtain .cur-t strong em{font-style:ita
         <h3>Candidature aux masterclass</h3>
         <p class="note">Choisissez la thématique qui vous intéresse. Les groupes sont limités à douze étudiants.</p>
         <form id="form-masterclass" novalidate>
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
           <div class="f"><label for="m-prenom">Prénom</label><input id="m-prenom" name="prenom" required autocomplete="given-name"></div>
           <div class="f"><label for="m-nom">Nom</label><input id="m-nom" name="nom" required autocomplete="family-name"></div>
           <div class="f"><label for="m-email">E-mail</label><input id="m-email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></div>
@@ -953,6 +954,7 @@ h1 em,h2 em,h3 em,.brand em,.t-title em,#curtain .cur-t strong em{font-style:ita
         <h3>Réservation pour le ciné-concert</h3>
         <p class="note">Une soirée avec douze musiciens en direct, suivie d'un cocktail. Indiquez le nombre de places souhaitées.</p>
         <form id="form-cineconcert" novalidate>
+          <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" aria-hidden="true" style="display:none">
           <div class="f"><label for="c-prenom">Prénom</label><input id="c-prenom" name="prenom" required autocomplete="given-name"></div>
           <div class="f"><label for="c-nom">Nom</label><input id="c-nom" name="nom" required autocomplete="family-name"></div>
           <div class="f"><label for="c-email">E-mail</label><input id="c-email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></div>
@@ -1038,6 +1040,11 @@ const PARTNER_SLOTS = 8;
 // Envoi des formulaires par WhatsApp : numéro qui reçoit les messages, au format international
 // sans espaces ni « + » (ex. Côte d'Ivoire : '2250700000000'). Un numéro différent par formulaire est possible.
 const WHATSAPP = { masterclass:'+33745446404', cineconcert:'+33745446404' };
+
+// Réservations enregistrées dans Google Sheet (avec e-mails de confirmation, d'alerte et de rappel).
+// Collez ici l'URL « /exec » de l'application web Google Apps Script (voir google-sheet/README.md).
+// Laissée vide, le site retombe sur l'envoi par WhatsApp ci-dessus ; renseignée, WhatsApp devient optionnel.
+const RESERVATIONS_URL = '';
 
 /* ================== OUTILS ================== */
 const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1517,7 +1524,12 @@ const ART={
 
   Object.keys(boxes).forEach(key=>{
     const box=boxes[key],form=box.querySelector('form'),err=box.querySelector('.err'),ok=box.querySelector('.ok'),wrap=box.querySelector('.form-wrap');
-    form.addEventListener('submit',e=>{
+    if(RESERVATIONS_URL){
+      form.querySelector('button[type=submit]').textContent=key==='masterclass'?'Envoyer ma candidature':'Réserver mes places';
+      const sm=form.querySelector('.submit-row small');
+      if(sm)sm.textContent=key==='masterclass'?"Tous les champs sont obligatoires, sauf mention contraire. Vous recevrez une confirmation par e-mail.":'Tous les champs sont obligatoires. Vous recevrez votre confirmation par e-mail.';
+    }
+    form.addEventListener('submit',async e=>{
       e.preventDefault();err.hidden=true;
       form.querySelectorAll('.ferr').forEach(x=>x.remove());
       form.querySelectorAll('[aria-invalid]').forEach(x=>x.removeAttribute('aria-invalid'));
@@ -1535,7 +1547,7 @@ const ART={
         err.textContent='Certains champs sont manquants ou incorrects : ils sont signalés en rouge.';err.hidden=false;return;
       }
       const num=String(WHATSAPP[key]||'').replace(/\D/g,'');
-      if(!num){err.textContent="L'envoi par WhatsApp n'est pas encore configuré. Réessayez plus tard.";err.hidden=false;return}
+      if(!RESERVATIONS_URL&&!num){err.textContent="L'envoi n'est pas encore configuré. Réessayez plus tard.";err.hidden=false;return}
       const d=Object.fromEntries(new FormData(form).entries());
       const t=v=>String(v||'').trim();
       const lines=key==='masterclass'
@@ -1544,10 +1556,29 @@ const ART={
            '*Thématique :*',t(d.thematique),...(t(d.motivation)?['','*Motivation :*',t(d.motivation)]:[]),'','_Envoyé depuis le site_']
         : ['*RÉSERVATION CINÉ-CONCERT*','Abidjan Symphony · 13.11.2026 · YELAMS','',
            `*Nom :* ${t(d.prenom)} ${t(d.nom)}`,`*E-mail :* ${t(d.email)}`,`*Téléphone :* ${t(d.telephone)}`,`*Places :* ${t(d.places)}`,`*Profil :* ${t(d.profil)}`,'','_Envoyé depuis le site_'];
-      const url=`https://wa.me/${num}?text=${encodeURIComponent(lines.join('\n'))}`;
-      let w=null;try{w=window.open(url,'_blank');if(w)w.opener=null}catch(x){}
+      const url=num?`https://wa.me/${num}?text=${encodeURIComponent(lines.join('\n'))}`:'';
       const quoi=key==='masterclass'?'candidature':'réservation';
-      const again=box.querySelector('.wa-again');again.href=url;
+      const again=box.querySelector('.wa-again'),titre=ok.querySelector('h3');
+      if(RESERVATIONS_URL){
+        // enregistrement dans Google Sheet : le script envoie lui-même la confirmation par e-mail
+        const btn=form.querySelector('button[type=submit]'),label=btn.innerHTML;
+        btn.disabled=true;btn.textContent='Envoi en cours…';
+        const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
+        try{
+          await fetch(RESERVATIONS_URL,{method:'POST',mode:'no-cors',signal:ctl.signal,body:new URLSearchParams({...d,formulaire:key})});
+        }catch(x){
+          err.textContent="L'envoi a échoué. Vérifiez votre connexion puis réessayez.";err.hidden=false;
+          return;
+        }finally{clearTimeout(to);btn.disabled=false;btn.innerHTML=label}
+        titre.textContent=key==='masterclass'?'Candidature envoyée':'Réservation enregistrée';
+        box.querySelector('.ok-msg').textContent=`Merci ${t(d.prenom)}. ${key==='masterclass'?'Votre candidature est bien reçue':'Votre réservation est enregistrée'} : un e-mail de confirmation est envoyé à ${t(d.email)}. Pensez à vérifier vos courriers indésirables.`;
+        if(url){again.href=url;again.hidden=false;again.lastChild.textContent="Prévenir l'équipe sur WhatsApp"}else again.hidden=true;
+        wrap.hidden=true;ok.hidden=false;ok.scrollIntoView({behavior:'smooth',block:'center'});
+        if(AU.on)[69,72,76,81].forEach((m,i)=>tone(midi(m),{when:i*.12,vol:.3}));
+        return;
+      }
+      let w=null;try{w=window.open(url,'_blank');if(w)w.opener=null}catch(x){}
+      titre.textContent="Plus qu'une étape";again.hidden=false;again.href=url;
       again.lastChild.textContent=w?'Rouvrir WhatsApp':'Ouvrir WhatsApp';
       box.querySelector('.ok-msg').textContent=w
         ? `Merci ${t(d.prenom)}. WhatsApp s'est ouvert avec votre ${quoi} déjà rédigée : appuyez sur Envoyer dans WhatsApp pour la transmettre à l'équipe. Si rien ne s'est ouvert, utilisez le bouton ci-dessous.`
