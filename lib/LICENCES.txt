@@ -1,0 +1,2 @@
+qrcode.js  : QR Code Generator for JavaScript, Kazuhiko Arase (licence MIT). QR Code est une marque de DENSO WAVE INCORPORATED.
+jsQR.js    : jsQR, Cosmo Wolfe (licence Apache 2.0), https://github.com/cozmo/jsQR

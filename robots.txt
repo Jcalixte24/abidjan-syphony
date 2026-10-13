@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://abidjansymphony.netlify.app/sitemap.xml
+Sitemap: https://jcalixte24.github.io/abidjan-syphony/sitemap.xml

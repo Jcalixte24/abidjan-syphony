@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#101018">
+<title>Accueil · BOMLAAH</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--noir:#000;--orange:#FFB347;--vert:#19B45A;--rouge:#E5484D;--gris:#8F889E;--sans:'Open Sans',system-ui,sans-serif;--disp:'Montserrat',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#0b0b0b;color:#fff;font-family:var(--sans);display:flex;flex-direction:column;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#000;border-bottom:1px solid #222}
+header b{font-family:var(--disp);font-weight:800;font-size:1.05rem}
+header b i{color:var(--orange);font-weight:700}
+.compteur{font-family:var(--disp);font-weight:700;font-size:.95rem;color:#ddd;text-align:right;line-height:1.25}
+.compteur strong{color:var(--orange);font-size:1.35rem}
+.zone{position:relative;flex:1 1 auto;min-height:0;background:#000;overflow:hidden}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cible{position:absolute;left:50%;top:50%;width:min(68vw,320px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid rgba(255,179,71,.9);border-radius:24px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)}
+.demarrer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.demarrer p{max-width:320px;color:#ccc;line-height:1.5}
+.btn{font:700 1.05rem var(--disp);display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:.8rem 1.6rem;border-radius:999px;border:0;cursor:pointer;touch-action:manipulation;background:var(--orange);color:#000}
+.btn.sec{background:#222;color:#fff}
+.btn:active{transform:scale(.97)}
+.resultat{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}
+.resultat.on{display:flex}
+.resultat.ok{background:var(--vert)}
+.resultat.deja{background:var(--orange);color:#000}
+.resultat.non{background:var(--rouge)}
+.resultat .titre{font-family:var(--disp);font-weight:800;font-size:clamp(2rem,9vw,3rem);line-height:1.05}
+.resultat .qui{font-family:var(--disp);font-weight:700;font-size:clamp(1.4rem,6vw,2rem)}
+.resultat .detail{font-size:1.15rem;opacity:.95}
+.resultat .suite{margin-top:14px}
+.bas{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:#000;border-top:1px solid #222}
+.bas input{flex:1;min-width:0;height:50px;border-radius:14px;border:1px solid #444;background:#111;color:#fff;font:700 1.1rem "Courier New",monospace;letter-spacing:.08em;padding:0 14px;text-transform:uppercase}
+.bas input::placeholder{color:#777;font-weight:400;letter-spacing:.02em}
+.msg{padding:6px 16px;font-size:.85rem;color:#f2b8b8;background:#2a0f0f;display:none}
+.msg.on{display:block}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <b>BOMLAAH · Accueil</b>
+  <div class="compteur" id="compteur" aria-live="polite">Entrés<br><strong>–</strong></div>
+</header>
+<div class="msg" id="msg" role="alert"></div>
+
+<div class="zone" id="zone">
+  <video id="video" playsinline muted></video>
+  <div class="cible" id="cible" hidden></div>
+  <div class="demarrer" id="demarrer">
+    <p id="consigne">Scannez le QR code du billet. La caméra s'ouvre quand vous appuyez sur le bouton.</p>
+    <button class="btn" id="btnCamera" type="button">Ouvrir la caméra</button>
+  </div>
+  <div class="resultat" id="resultat" role="status" aria-live="assertive">
+    <div class="titre" id="rTitre"></div>
+    <div class="qui" id="rQui"></div>
+    <div class="detail" id="rDetail"></div>
+    <button class="btn sec suite" id="btnSuite" type="button">Scanner le suivant</button>
+  </div>
+</div>
+
+<form class="bas" id="manuel" autocomplete="off">
+  <input id="saisie" type="text" inputmode="text" autocapitalize="characters" placeholder="Code du billet" aria-label="Code du billet" maxlength="12">
+  <button class="btn" type="submit">Valider</button>
+</form>
+
+<script src="../config.js"></script>
+<script src="../lib/jsQR.js"></script>
+<script src="../lib/asym.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  // la clé d'accueil est dans l'adresse après « # » : elle ne part jamais vers un serveur ; on la garde le temps de la session
+  var cle = '';
+  try {
+    var m = location.hash.match(/k=([^&]+)/);
+    if (m) { cle = decodeURIComponent(m[1]); sessionStorage.setItem('asym_cle', cle); history.replaceState(null, '', location.pathname + location.search); }
+    else cle = sessionStorage.getItem('asym_cle') || '';
+  } catch (e) { var m2 = location.hash.match(/k=([^&]+)/); if (m2) cle = decodeURIComponent(m2[1]); }
+  var api = window.ASYM_API || '';
+  var video = $('video'), canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+  var flux = null, boucle = null, pause = false, dernier = '', dernierT = 0;
+
+  function erreur(t) { var e = $('msg'); e.textContent = t; e.classList.toggle('on', !!t); }
+  if (!api) erreur('Le système de réservation n\'est pas encore relié (config.js).');
+  else if (!cle) erreur('Clé d\'accueil absente : ouvrez la page avec le lien fourni par l\'équipe (menu « BOMLAAH » du Google Sheet).');
+
+  function compteur(s) {
+    if (!s || s.presents == null) return;
+    $('compteur').innerHTML = 'Entrés<br><strong>' + s.presents + '</strong> / ' + s.reservations;
+  }
+  function stats() {
+    if (!api || !cle) return;
+    ASYM.jsonp(api + '?a=stats&k=' + encodeURIComponent(cle), compteur);
+  }
+
+  function bip(ok) {
+    try {
+      if (navigator.vibrate) navigator.vibrate(ok ? 120 : [120, 80, 120]);
+      var A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+      var c = new A(), o = c.createOscillator(), g = c.createGain();
+      o.frequency.value = ok ? 880 : 220; o.type = 'sine'; g.gain.value = .15; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + (ok ? .15 : .35));
+    } catch (e) {}
+  }
+
+  function afficher(r) {
+    var z = $('resultat'); z.className = 'resultat on';
+    var qui = r.prenom ? (r.prenom + ' ' + (r.nom || '')) : '', places = r.places ? r.places + ' place' + (r.places > 1 ? 's' : '') : '';
+    $('rQui').textContent = qui; $('rDetail').textContent = '';
+    if (r.etat === 'ok') { z.classList.add('ok'); $('rTitre').textContent = 'ENTRÉE OK'; $('rDetail').textContent = places; bip(true); }
+    else if (r.etat === 'deja') { z.classList.add('deja'); $('rTitre').textContent = 'DÉJÀ SCANNÉ'; $('rDetail').textContent = (r.heure ? 'Entré(e) le ' + r.heure : '') + (places ? ' · ' + places : ''); bip(false); }
+    else { z.classList.add('non'); bip(false);
+      $('rTitre').textContent = r.etat === 'annule' ? 'RÉSERVATION ANNULÉE' : r.etat === 'non_retenu' ? 'NON RETENU' : r.etat === 'refuse' ? 'CLÉ REFUSÉE' : r.etat === 'reseau' ? 'PAS DE RÉSEAU' : 'BILLET INCONNU';
+      $('rDetail').textContent = r.etat === 'refuse' ? 'Rouvrez la page avec le lien d\'accueil fourni.' : r.etat === 'reseau' ? 'Vérifiez la connexion puis rescannez.' : ''; }
+    compteur(r);
+    pause = true;
+  }
+  $('btnSuite').onclick = function () { $('resultat').className = 'resultat'; pause = false; dernier = ''; if (!flux) $('demarrer').hidden = false; };
+
+  function verifier(code) {
+    code = String(code || '').trim().toUpperCase();
+    if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(code)) { afficher({ etat: 'inconnu' }); return; }
+    pause = true;
+    if (!api || !cle) { afficher({ etat: 'refuse' }); return; }
+    ASYM.jsonp(api + '?a=checkin&c=' + encodeURIComponent(code) + '&k=' + encodeURIComponent(cle), afficher, function () { afficher({ etat: 'reseau' }); });
+  }
+
+  function lire() {
+    if (!flux) return;
+    if (!pause && video.readyState >= 2 && video.videoWidth) {
+      var w = video.videoWidth, h = video.videoHeight, s = Math.min(1, 720 / Math.max(w, h));
+      canvas.width = Math.round(w * s); canvas.height = Math.round(h * s);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var q = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (q && q.data) {
+        var c = q.data.trim().toUpperCase(), now = Date.now();
+        if (/^(CC|MC)-[A-Z0-9]{6}$/.test(c) && !(c === dernier && now - dernierT < 4000)) { dernier = c; dernierT = now; verifier(c); }
+      }
+    }
+    boucle = setTimeout(lire, 110);
+  }
+
+  $('btnCamera').onclick = function () {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { erreur('Caméra indisponible sur ce navigateur : saisissez le code à la main.'); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false }).then(function (f) {
+      flux = f; video.srcObject = f; video.setAttribute('playsinline', ''); video.play();
+      $('demarrer').hidden = true; $('cible').hidden = false; erreur(''); lire();
+    }).catch(function () { erreur('Accès à la caméra refusé. Autorisez-la dans les réglages du navigateur, ou saisissez le code à la main.'); });
+  };
+
+  $('manuel').onsubmit = function (e) { e.preventDefault(); var v = $('saisie').value; $('saisie').value = ''; $('saisie').blur(); verifier(v); };
+  window.addEventListener('pagehide', function () { if (flux) flux.getTracks().forEach(function (t) { t.stop(); }); });
+  stats();
+})();
+</script>
+</body>
+</html>

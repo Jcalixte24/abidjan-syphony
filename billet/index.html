@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#101018">
+<title>Mon billet · BOMLAAH</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--noir:#000;--orange:#FFB347;--violet:#8B3DFF;--gris:#8F889E;--blanc:#fff;--sans:'Open Sans',system-ui,sans-serif;--disp:'Montserrat',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh;background:radial-gradient(80% 50% at 50% 100%,rgba(255,179,71,.25),transparent 70%),radial-gradient(60% 40% at 10% 0%,rgba(139,61,255,.28),transparent 70%),var(--noir);color:var(--blanc);font-family:var(--sans);display:flex;flex-direction:column;align-items:center;padding:28px 18px 40px}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:3px}
+.marque{font-family:var(--disp);font-weight:800;font-size:1.5rem;letter-spacing:-.02em;text-decoration:none;margin-bottom:6px}
+.marque i{color:var(--orange);font-weight:700}
+.sous{font-family:var(--disp);font-weight:600;font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;color:#B5B5B5;margin-bottom:22px}
+.billet{width:100%;max-width:420px;background:#fff;color:#000;border-radius:28px;padding:22px 22px 26px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.65)}
+.billet canvas,.billet img{display:block;width:100%;height:auto;border-radius:14px}
+.code{font-family:'Courier New',monospace;font-weight:700;font-size:2rem;letter-spacing:.08em;color:#000;margin-top:16px}
+.nom{font-family:var(--disp);font-weight:800;font-size:1.25rem;margin-top:6px}
+.infos{margin-top:4px;font-size:.98rem;color:#444;line-height:1.5}
+.avis{width:100%;max-width:420px;border-radius:18px;padding:18px 20px;margin-bottom:16px;font-weight:600;text-align:center;line-height:1.45}
+.avis.rouge{background:#3a0f0f;border:1px solid #a33;color:#ffd0d0}
+.avis.orange{background:#2b1b00;border:1px solid #FFB347;color:#ffe2a8}
+.actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:22px;width:100%;max-width:420px}
+.btn{font:700 1rem var(--disp);display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:.8rem 1.4rem;border-radius:999px;border:0;cursor:pointer;text-decoration:none;touch-action:manipulation}
+.btn-or{background:var(--orange);color:#000}
+.btn-ghost{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.4)}
+.btn:active{transform:scale(.97)}
+.note{margin-top:18px;max-width:420px;text-align:center;font-size:.9rem;color:#B5B5B5;line-height:1.55}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<a class="marque" href="../">BOMLAAH</a>
+<div class="sous">Votre billet</div>
+
+<div id="avis" class="avis" hidden></div>
+
+<main class="billet" id="billet" hidden>
+  <div id="qr" role="img" aria-label="QR code de votre billet"></div>
+  <div class="code" id="code"></div>
+  <div class="nom" id="nom"></div>
+  <div class="infos" id="infos"></div>
+</main>
+
+<div class="actions" id="actions" hidden>
+  <button class="btn btn-or" id="enregistrer" type="button">Enregistrer mon billet</button>
+  <a class="btn btn-ghost" href="../">Retour au site</a>
+</div>
+<p class="note" id="note" hidden>Présentez ce QR code à l'entrée, sur votre téléphone ou imprimé. Augmentez la luminosité de l'écran si le scan hésite.</p>
+
+<script src="../config.js"></script>
+<script src="../lib/qrcode.js"></script>
+<script src="../lib/asym.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var code = (new URLSearchParams(location.search).get('c') || '').trim().toUpperCase();
+  var avis = $('avis');
+  function dire(texte, classe) { avis.textContent = texte; avis.className = 'avis ' + classe; avis.hidden = false; }
+  function montrer(lignes, nom) {
+    $('qr').appendChild(ASYM.qrCanvas(code, 700));
+    $('code').textContent = code;
+    if (nom) $('nom').textContent = nom;
+    $('infos').innerHTML = lignes.map(function (l) { return '<div>' + l.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</div>'; }).join('');
+    $('billet').hidden = false; $('actions').hidden = false; $('note').hidden = false;
+    $('enregistrer').onclick = function () {
+      ASYM.telecharger(ASYM.billetPng(code, [nom || '', lignes[0] || '', lignes[1] || ''].filter(Boolean)), 'billet-' + code + '.png');
+    };
+  }
+  if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(code)) { dire('Ce lien de billet est incomplet. Utilisez le bouton de votre e-mail de confirmation.', 'rouge'); return; }
+  var api = window.ASYM_API || '';
+  var secours = function () { dire('Impossible de vérifier votre réservation pour le moment (connexion). Votre QR code reste valable : présentez-le à l\'entrée.', 'orange'); montrer([], ''); };
+  if (!api) { secours(); return; }
+  ASYM.jsonp(api + '?a=billet&c=' + encodeURIComponent(code), function (r) {
+    if (!r || !r.ok) { dire('Billet introuvable. Vérifiez le lien reçu par e-mail.', 'rouge'); return; }
+    if (r.statut === 'Annulé') { dire('Cette réservation a été annulée.', 'rouge'); return; }
+    if (r.statut === 'Candidature' || r.statut === 'Refusé') { dire('Votre candidature aux masterclass est en cours d\'étude. Vous recevrez une réponse par e-mail.', 'orange'); return; }
+    var lignes = [r.date + (r.horaires ? ' · ' + r.horaires : ''), r.lieu];
+    if (r.places) lignes.unshift(r.places + ' place' + (r.places > 1 ? 's' : ''));
+    montrer(lignes.length > 2 ? [lignes[0] + ' · ' + lignes[1], lignes[2]] : lignes, r.prenom + ' ' + r.nom);
+  }, secours);
+})();
+</script>
+</body>
+</html>
