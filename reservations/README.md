@@ -4,7 +4,7 @@ Un seul compte Google suffit. Tout se passe dans un Google Sheet :
 - chaque réservation arrive dans le Sheet (la « base de données » + la liste des invités) ;
 - un e-mail de confirmation avec le billet QR part au client, et l'équipe reçoit une alerte ;
 - un rappel automatique part à J-5 (« confirmez votre venue ») et à J-1 ;
-- le jour J, la page d'accueil `scan/` lit les QR codes avec la caméra du téléphone et affiche vert / orange / rouge.
+- le jour J, l'**application organisateurs** (`organisateurs/`) lit les QR codes avec la caméra du téléphone (vert / orange / rouge), affiche la liste de tous les inscrits avec leurs données, et suit les places du ciné-concert et de chaque masterclass.
 
 ## 1. Créer le Sheet et coller le code
 1. Ouvrir <https://sheets.new> avec le compte Google de l'événement. Le nommer « BOMLAAH — Réservations ».
@@ -32,13 +32,14 @@ Recharger le Sheet : un menu **BOMLAAH** apparaît. Lancer dans l'ordre :
 
 Après toute modification de `Code.gs` : **Déployer → Gérer les déploiements → ✏️ → Nouvelle version**. L'URL ne change pas.
 
-## 4. Le jour J
-- Dans le menu **BOMLAAH → Lien accueil**, copier l'adresse de la page de scan et l'envoyer aux hôtes d'accueil (elle contient la clé après `#`, qui disparaît de la barre d'adresse une fois la page ouverte).
-- La page demande la caméra (obligatoire : la page doit être en https, ce qui est le cas sur GitHub Pages). En cas de souci, le code du billet peut être saisi à la main.
-- Écran **vert** = entrée validée, **orange** = déjà scanné (l'heure s'affiche), **rouge** = annulé, inconnu ou non retenu. Le compteur « Entrés n / total » est en haut.
+## 4. Application organisateurs
+Menu **BOMLAAH → Lien de l'application organisateurs** : copier l'adresse (elle contient la clé après `#`, qui disparaît de la barre d'adresse une fois la page ouverte) et l'envoyer à l'équipe d'accueil. Sans le lien, la page demande la clé d'accueil. Trois onglets :
+- **Scanner** : la caméra lit le QR du billet. Écran **vert** = entrée validée (nom, type, places, masterclass), **orange** = déjà scanné (l'heure s'affiche), **rouge** = annulé, non retenu ou inconnu. Le code peut aussi être saisi à la main. La page doit être en https (c'est le cas sur GitHub Pages).
+- **Inscrits** : ciné-concert ou masterclass, avec recherche (nom, e-mail, téléphone, code) et filtres (présents, annulés, candidatures, retenus…). Un appui sur une personne affiche toutes ses données et permet de valider ou annuler son entrée, de changer son statut (passer une candidature en « Retenu » envoie son billet par e-mail), de l'appeler ou de lui écrire. Un bouton exporte la liste en CSV.
+- **Places** : places réservées du ciné-concert (et restantes si la capacité de la salle est renseignée dans `PLACES_CINECONCERT`) ; pour chaque masterclass, candidatures, retenus sur 12 places, places libres et entrés. La page se rafraîchit toute seule.
 
 ## Masterclass
-Les candidatures arrivent avec le statut **Candidature**. Pour accepter, passer la cellule *Statut* à **Retenu** : la personne reçoit son billet QR. **Refusé** envoie la réponse négative.
+Les candidatures arrivent avec le statut **Candidature**. Pour accepter, passer le statut à **Retenu** (dans l'application organisateurs, onglet Inscrits) : la personne reçoit son billet QR par e-mail. Chaque masterclass compte 12 places ; les colonnes du Sheet indiquent si le candidat est étudiant ou professionnel, son profil et sa structure.
 
 ## Bon à savoir
 - **Limite d'envoi** : un compte Gmail gratuit envoie environ 100 e-mails par jour (1 500 avec Google Workspace). Pour ~700 inscrits, les rappels doivent être étalés sur plusieurs jours, ou envoyés depuis un compte Workspace.

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#101018">
+<title>Organisateurs · BOMLAAH</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--noir:#101018;--noir-2:#181826;--noir-3:#222236;--lav:#D7C2FF;--elec:#8B3DFF;--brun:#4B167D;--or:#FFB347;--vert:#19B45A;--rouge:#E5484D;--txt:#F5F1F8;--txt-2:#B9B2C9;--trait:rgba(215,194,255,.16);--sans:'Open Sans',system-ui,sans-serif;--disp:'Montserrat',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--noir);color:var(--txt);font-family:var(--sans);display:flex;flex-direction:column;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation}
+a{color:var(--lav)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:#0b0b12;border-bottom:1px solid var(--trait)}
+header b{font-family:var(--disp);font-weight:800;font-size:1.02rem;letter-spacing:.02em}
+header b i{color:var(--or);font-style:normal;font-weight:600;margin-left:.4rem;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase}
+.compteur{font-family:var(--disp);font-weight:700;font-size:.85rem;color:var(--txt-2);text-align:right;line-height:1.2}
+.compteur strong{color:var(--or);font-size:1.3rem}
+.msg{padding:8px 16px;font-size:.88rem;color:#ffd0d0;background:#3a1216}
+main{flex:1 1 auto;min-height:0;position:relative;display:flex;flex-direction:column}
+.vue{flex:1 1 auto;min-height:0;display:none;flex-direction:column}
+.vue.on{display:flex}
+nav.onglets{display:flex;background:#0b0b12;border-top:1px solid var(--trait);padding:0 8px env(safe-area-inset-bottom,0px)}
+nav.onglets button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 9px;font-family:var(--disp);font-weight:600;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--txt-2);border-top:2px solid transparent}
+nav.onglets button svg{width:22px;height:22px}
+nav.onglets button[aria-selected="true"]{color:var(--or);border-top-color:var(--or)}
+.btn{font:700 .95rem var(--disp);display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:46px;padding:.7rem 1.3rem;border-radius:999px;background:var(--or);color:#101018;touch-action:manipulation}
+.btn.sec{background:var(--noir-3);color:var(--txt)}
+.btn.petit{min-height:38px;padding:.45rem .95rem;font-size:.82rem}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5}
+/* scanner */
+.zone{position:relative;flex:1 1 auto;min-height:0;background:#000;overflow:hidden}
+video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cible{position:absolute;left:50%;top:50%;width:min(66vw,300px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid rgba(255,179,71,.9);border-radius:24px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)}
+.demarrer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.demarrer p{max-width:320px;color:var(--txt-2);line-height:1.55}
+.resultat{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center}
+.resultat.on{display:flex}
+.resultat.ok{background:var(--vert)}
+.resultat.deja{background:var(--or);color:#101018}
+.resultat.non{background:var(--rouge)}
+.resultat .titre{font-family:var(--disp);font-weight:800;font-size:clamp(2rem,9vw,3rem);line-height:1.05}
+.resultat .qui{font-family:var(--disp);font-weight:700;font-size:clamp(1.4rem,6vw,2rem)}
+.resultat .detail{font-size:1.1rem;opacity:.95;max-width:30ch}
+.resultat .suite{margin-top:14px;background:rgba(16,16,24,.85);color:#fff}
+.saisie{display:flex;gap:10px;padding:10px 16px;background:#0b0b12;border-top:1px solid var(--trait)}
+.saisie input{flex:1;min-width:0;height:48px;border-radius:14px;border:1px solid #444;background:#111;color:#fff;font:700 1.05rem "Courier New",monospace;letter-spacing:.08em;padding:0 14px;text-transform:uppercase}
+.saisie input::placeholder{color:#777;font-weight:400;letter-spacing:.02em}
+/* inscrits */
+.outils{padding:12px 16px;display:flex;flex-direction:column;gap:10px;background:var(--noir-2);border-bottom:1px solid var(--trait)}
+.seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--noir);border:1px solid var(--trait)}
+.seg button{flex:1;padding:.55rem .6rem;border-radius:999px;font-weight:600;font-size:.85rem;color:var(--txt-2)}
+.seg button[aria-selected="true"]{background:var(--elec);color:#fff}
+.outils input[type=search]{width:100%;height:44px;border-radius:12px;border:1px solid var(--trait);background:var(--noir);color:#fff;padding:0 14px;font:inherit;font-size:16px}
+.filtres{display:flex;gap:6px;flex-wrap:wrap}
+.filtres button{padding:.35rem .8rem;border-radius:999px;border:1px solid var(--trait);font-size:.8rem;font-weight:600;color:var(--txt-2)}
+.filtres button[aria-pressed="true"]{border-color:var(--or);color:var(--or);background:rgba(255,179,71,.1)}
+.liste{flex:1 1 auto;min-height:0;overflow:auto;padding:8px 12px 18px;-webkit-overflow-scrolling:touch}
+.bilan{padding:6px 4px 10px;font-size:.84rem;color:var(--txt-2)}
+.bilan b{color:var(--txt)}
+.pers{border:1px solid var(--trait);border-radius:16px;background:var(--noir-2);margin-bottom:8px;overflow:hidden}
+.pers>button{display:flex;width:100%;align-items:center;gap:12px;padding:12px 14px;text-align:left}
+.pers .nom{flex:1;min-width:0}
+.pers .nom b{display:block;font-family:var(--disp);font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pers .nom small{display:block;color:var(--txt-2);font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pastille{flex:none;font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.28rem .6rem;border-radius:999px;background:var(--noir-3);color:var(--txt-2)}
+.pastille.p-in{background:rgba(25,180,90,.2);color:#6fe3a2}
+.pastille.p-ok{background:rgba(255,179,71,.18);color:var(--or)}
+.pastille.p-no{background:rgba(229,72,77,.18);color:#ff9a9d}
+.pers .n{flex:none;min-width:1.8rem;text-align:center;font-family:var(--disp);font-weight:800;color:var(--lav)}
+.fiche{padding:4px 14px 14px;border-top:1px solid var(--trait);background:var(--noir)}
+.fiche dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:10px 0 12px;font-size:.88rem}
+.fiche dt{color:var(--txt-2)}
+.fiche dd{overflow-wrap:anywhere}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.actions select{height:38px;border-radius:12px;border:1px solid var(--trait);background:var(--noir-3);color:#fff;padding:0 10px;font:inherit;font-size:.85rem}
+.vide{padding:40px 16px;text-align:center;color:var(--txt-2)}
+/* places */
+.places{flex:1 1 auto;min-height:0;overflow:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:14px}
+.carte{border:1px solid var(--trait);border-radius:20px;background:var(--noir-2);padding:18px}
+.carte h2{font-family:var(--disp);font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--lav);font-weight:700}
+.gros{display:flex;align-items:baseline;gap:.5rem;margin-top:10px}
+.gros b{font-family:var(--disp);font-weight:800;font-size:3rem;line-height:1;color:var(--or)}
+.gros span{color:var(--txt-2)}
+.jauge{height:10px;border-radius:99px;background:var(--noir-3);overflow:hidden;margin-top:12px}
+.jauge i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--elec),var(--or));transition:width .6s}
+.jauge.plein i{background:var(--rouge)}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.mini div{background:var(--noir);border-radius:12px;padding:10px;text-align:center}
+.mini b{display:block;font-family:var(--disp);font-size:1.25rem}
+.mini small{color:var(--txt-2);font-size:.72rem}
+.mc-l{padding:12px 0;border-top:1px solid var(--trait)}
+.mc-l:first-of-type{border-top:0}
+.mc-l .t{display:flex;justify-content:space-between;gap:10px;font-size:.9rem;font-weight:600}
+.mc-l .t span:last-child{color:var(--or);white-space:nowrap}
+.mc-l small{display:block;color:var(--txt-2);margin-top:3px;font-size:.78rem}
+/* connexion */
+.connexion{position:absolute;inset:0;z-index:5;background:var(--noir);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:28px;text-align:center}
+.connexion h1{font-family:var(--disp);font-weight:800;font-size:1.6rem}
+.connexion p{max-width:34ch;color:var(--txt-2);line-height:1.6}
+.connexion input{width:min(100%,360px);height:50px;border-radius:14px;border:1px solid var(--trait);background:var(--noir-2);color:#fff;padding:0 14px;font:inherit;font-size:16px;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <b>BOMLAAH<i>Organisateurs</i></b>
+  <div class="compteur" id="compteur" aria-live="polite">Entrés<br><strong>–</strong></div>
+</header>
+<div class="msg" id="msg" role="alert" hidden></div>
+
+<main>
+  <!-- SCANNER -->
+  <section class="vue on" id="v-scan" aria-label="Scanner un billet">
+    <div class="zone" id="zone">
+      <video id="video" playsinline muted></video>
+      <div class="cible" id="cible" hidden></div>
+      <div class="demarrer" id="demarrer">
+        <p>Scannez le QR code du billet, sur téléphone ou imprimé. La caméra s'ouvre quand vous appuyez sur le bouton.</p>
+        <button class="btn" id="btnCamera" type="button">Ouvrir la caméra</button>
+      </div>
+      <div class="resultat" id="resultat" role="status" aria-live="assertive">
+        <div class="titre" id="rTitre"></div>
+        <div class="qui" id="rQui"></div>
+        <div class="detail" id="rDetail"></div>
+        <button class="btn suite" id="btnSuite" type="button">Scanner le suivant</button>
+      </div>
+    </div>
+    <form class="saisie" id="manuel" autocomplete="off">
+      <input id="saisie" type="text" inputmode="text" autocapitalize="characters" placeholder="Code du billet" aria-label="Code du billet" maxlength="12">
+      <button class="btn" type="submit">Valider</button>
+    </form>
+  </section>
+
+  <!-- INSCRITS -->
+  <section class="vue" id="v-liste" aria-label="Liste des inscrits">
+    <div class="outils">
+      <div class="seg" role="tablist" aria-label="Type d'inscription">
+        <button type="button" role="tab" id="t-cine" aria-selected="true" data-t="cine">Ciné-concert</button>
+        <button type="button" role="tab" id="t-master" aria-selected="false" data-t="master">Masterclass</button>
+      </div>
+      <input type="search" id="recherche" placeholder="Rechercher un inscrit" aria-label="Rechercher un inscrit" autocomplete="off">
+      <div class="filtres" id="filtres"></div>
+    </div>
+    <div class="liste" id="liste"></div>
+  </section>
+
+  <!-- PLACES -->
+  <section class="vue" id="v-places" aria-label="Places">
+    <div class="places" id="places"></div>
+  </section>
+
+  <div class="connexion" id="connexion" hidden>
+    <h1>Application organisateurs</h1>
+    <p>Saisissez la clé d'accueil fournie par l'équipe, ou ouvrez le lien complet qu'elle vous a envoyé.</p>
+    <input id="cle" type="password" placeholder="Clé d'accueil" aria-label="Clé d'accueil" autocomplete="off">
+    <button class="btn" id="btnCle" type="button">Entrer</button>
+  </div>
+</main>
+
+<nav class="onglets" id="onglets" aria-label="Sections">
+  <button type="button" data-v="scan" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg>Scanner</button>
+  <button type="button" data-v="liste" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Inscrits</button>
+  <button type="button" data-v="places" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Places</button>
+</nav>
+
+<script src="../config.js"></script>
+<script src="../lib/jsQR.js"></script>
+<script src="../lib/asym.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var api = window.ASYM_API || '', cle = '';
+  // la clé est dans l'adresse après « # » : elle ne part jamais vers un serveur ; on la garde le temps de la session
+  try {
+    var m = location.hash.match(/k=([^&]+)/);
+    if (m) { cle = decodeURIComponent(m[1]); sessionStorage.setItem('asym_cle', cle); history.replaceState(null, '', location.pathname + location.search); }
+    else cle = sessionStorage.getItem('asym_cle') || '';
+  } catch (e) { var m2 = location.hash.match(/k=([^&]+)/); if (m2) cle = decodeURIComponent(m2[1]); }
+
+  var esc = function (v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  function erreur(t) { var e = $('msg'); e.textContent = t; e.hidden = !t; }
+  var donnees = { cine: [], master: [], places: null }, type = 'cine', filtre = 'tous', ouverte = null, vueCourante = 'scan';
+
+  /* ---------- navigation ---------- */
+  function vue(v) {
+    vueCourante = v;
+    ['scan', 'liste', 'places'].forEach(function (x) { $('v-' + x).classList.toggle('on', x === v); });
+    [].forEach.call($('onglets').querySelectorAll('button'), function (b) { b.setAttribute('aria-selected', b.dataset.v === v); });
+    if (v !== 'scan') arreterCamera();
+    if (v === 'liste' || v === 'places') charger();
+  }
+  $('onglets').addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) vue(b.dataset.v); });
+
+  /* ---------- appels à l'API ---------- */
+  function appel(params, ok, ko) {
+    var q = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+    ASYM.jsonp(api + '?' + q + '&k=' + encodeURIComponent(cle), function (r) {
+      if (r && r.etat === 'refuse') { erreur('Clé refusée. Rouvrez le lien fourni par l\'équipe ou saisissez la bonne clé.'); sessionStorage.removeItem('asym_cle'); $('connexion').hidden = false; return; }
+      ok(r);
+    }, ko || function () { erreur('Pas de réseau. Vérifiez la connexion.'); });
+  }
+  function compteur(p) {
+    if (!p || !p.cine) return;
+    $('compteur').innerHTML = 'Entrés<br><strong>' + (p.cine.presents + p.master.presents) + '</strong> / ' + (p.cine.reservations + p.master.retenus);
+  }
+  function charger() {
+    erreur('');
+    appel({ a: 'liste' }, function (r) {
+      if (!r || !r.ok) { erreur('Données indisponibles.'); return; }
+      donnees = r; compteur(r.places);
+      if (vueCourante === 'liste') dessinerListe();
+      if (vueCourante === 'places') dessinerPlaces();
+    });
+  }
+  if (!api) erreur('Le système de réservation n\'est pas encore relié (config.js).');
+  else if (!cle) $('connexion').hidden = false;
+  else appel({ a: 'places' }, function (r) { if (r && r.ok) compteur(r); });
+  $('btnCle').addEventListener('click', function () {
+    var v = $('cle').value.trim(); if (!v) return;
+    cle = v; try { sessionStorage.setItem('asym_cle', v); } catch (e) {}
+    $('connexion').hidden = true; $('cle').value = ''; erreur('');
+    appel({ a: 'places' }, function (r) { if (r && r.ok) compteur(r); });
+  });
+  $('cle').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btnCle').click(); });
+
+  /* ---------- scanner ---------- */
+  var video = $('video'), canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+  var flux = null, boucle = null, pause = false, dernier = '', dernierT = 0;
+  function bip(ok) {
+    try {
+      if (navigator.vibrate) navigator.vibrate(ok ? 120 : [120, 80, 120]);
+      var A = window.AudioContext || window.webkitAudioContext; if (!A) return;
+      var c = new A(), o = c.createOscillator(), g = c.createGain();
+      o.frequency.value = ok ? 880 : 220; o.type = 'sine'; g.gain.value = .15; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + (ok ? .15 : .35));
+    } catch (e) {}
+  }
+  function afficher(r) {
+    var z = $('resultat'); z.className = 'resultat on';
+    var qui = r.prenom ? (r.prenom + ' ' + (r.nom || '')) : '';
+    var places = r.type === 'cineconcert' && r.places ? r.places + ' place' + (r.places > 1 ? 's' : '') : '';
+    var genre = r.type === 'masterclass' ? 'Masterclass' : r.type === 'cineconcert' ? 'Ciné-concert' : '';
+    var info = [genre, places, r.detail].filter(Boolean).join(' · ');
+    $('rQui').textContent = qui; $('rDetail').textContent = '';
+    if (r.etat === 'ok') { z.classList.add('ok'); $('rTitre').textContent = 'ENTRÉE OK'; $('rDetail').textContent = info; bip(true); }
+    else if (r.etat === 'deja') { z.classList.add('deja'); $('rTitre').textContent = 'DÉJÀ SCANNÉ'; $('rDetail').textContent = (r.heure ? 'Entré(e) le ' + r.heure : '') + (info ? ' · ' + info : ''); bip(false); }
+    else {
+      z.classList.add('non'); bip(false);
+      $('rTitre').textContent = r.etat === 'annule' ? 'RÉSERVATION ANNULÉE' : r.etat === 'non_retenu' ? 'NON RETENU' : r.etat === 'refuse' ? 'CLÉ REFUSÉE' : r.etat === 'reseau' ? 'PAS DE RÉSEAU' : 'BILLET INCONNU';
+      $('rDetail').textContent = r.etat === 'refuse' ? 'Rouvrez le lien d\'accueil fourni.' : r.etat === 'reseau' ? 'Vérifiez la connexion puis rescannez.' : info;
+    }
+    pause = true;
+    if (r.etat === 'ok' || r.etat === 'deja') appel({ a: 'places' }, function (p) { if (p && p.ok) compteur(p); });
+  }
+  $('btnSuite').onclick = function () { $('resultat').className = 'resultat'; pause = false; dernier = ''; if (!flux) $('demarrer').hidden = false; };
+  function verifier(code) {
+    code = String(code || '').trim().toUpperCase();
+    if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(code)) { afficher({ etat: 'inconnu' }); return; }
+    pause = true;
+    if (!api || !cle) { afficher({ etat: 'refuse' }); return; }
+    ASYM.jsonp(api + '?a=checkin&c=' + encodeURIComponent(code) + '&k=' + encodeURIComponent(cle), afficher, function () { afficher({ etat: 'reseau' }); });
+  }
+  function lire() {
+    if (!flux) return;
+    if (!pause && video.readyState >= 2 && video.videoWidth) {
+      var w = video.videoWidth, h = video.videoHeight, s = Math.min(1, 720 / Math.max(w, h));
+      canvas.width = Math.round(w * s); canvas.height = Math.round(h * s);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      var q = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+      if (q && q.data) {
+        var c = q.data.trim().toUpperCase(), now = Date.now();
+        if (/^(CC|MC)-[A-Z0-9]{6}$/.test(c) && !(c === dernier && now - dernierT < 4000)) { dernier = c; dernierT = now; verifier(c); }
+      }
+    }
+    boucle = setTimeout(lire, 110);
+  }
+  function arreterCamera() {
+    clearTimeout(boucle);
+    if (flux) { flux.getTracks().forEach(function (t) { t.stop(); }); flux = null; video.srcObject = null; }
+    $('cible').hidden = true; $('demarrer').hidden = false;
+  }
+  $('btnCamera').onclick = function () {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { erreur('Caméra indisponible sur ce navigateur : saisissez le code à la main.'); return; }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false }).then(function (f) {
+      flux = f; video.srcObject = f; video.setAttribute('playsinline', ''); video.play();
+      $('demarrer').hidden = true; $('cible').hidden = false; erreur(''); lire();
+    }).catch(function () { erreur('Accès à la caméra refusé. Autorisez-la dans les réglages du navigateur, ou saisissez le code à la main.'); });
+  };
+  $('manuel').onsubmit = function (e) { e.preventDefault(); var v = $('saisie').value; $('saisie').value = ''; $('saisie').blur(); verifier(v); };
+  addEventListener('pagehide', arreterCamera);
+
+  /* ---------- liste des inscrits ---------- */
+  var CHAMPS_CACHES = { 'Date': 1, 'Code': 1, 'Prénom': 1, 'Nom': 1, 'Rappel J-5': 1, 'Rappel J-1': 1 };
+  function present(l) { return !!String(l['Présent'] || ''); }
+  function filtresDe(t) {
+    return t === 'cine' ? [['tous', 'Tous'], ['presents', 'Présents'], ['absents', 'Pas encore entrés'], ['annules', 'Annulés']]
+                        : [['tous', 'Tous'], ['Candidature', 'Candidatures'], ['Retenu', 'Retenus'], ['Refusé', 'Refusés'], ['presents', 'Présents']];
+  }
+  function garde(l) {
+    var s = String(l['Statut']);
+    if (filtre === 'tous') return true;
+    if (filtre === 'presents') return present(l);
+    if (filtre === 'absents') return !present(l) && s !== 'Annulé';
+    if (filtre === 'annules') return s === 'Annulé';
+    return s === filtre;
+  }
+  function pastille(l) {
+    if (present(l)) return '<span class="pastille p-in">Entré</span>';
+    var s = String(l['Statut']);
+    return '<span class="pastille ' + (s === 'Annulé' || s === 'Refusé' ? 'p-no' : s === 'Confirmé' || s === 'Retenu' ? 'p-ok' : '') + '">' + esc(s) + '</span>';
+  }
+  function dessinerFiltres() {
+    $('filtres').innerHTML = filtresDe(type).map(function (f) { return '<button type="button" data-f="' + esc(f[0]) + '" aria-pressed="' + (filtre === f[0]) + '">' + esc(f[1]) + '</button>'; }).join('');
+  }
+  function dessinerListe() {
+    dessinerFiltres();
+    var q = $('recherche').value.trim().toLowerCase();
+    var tout = donnees[type] || [];
+    var lignes = tout.filter(garde).filter(function (l) {
+      return !q || [l['Prénom'], l['Nom'], l['E-mail'], l['Téléphone'], l['Code']].join(' ').toLowerCase().indexOf(q) !== -1;
+    });
+    var places = type === 'cine' ? lignes.filter(function (l) { return l['Statut'] !== 'Annulé'; }).reduce(function (s, l) { return s + (Number(l['Places']) || 1); }, 0) : 0;
+    var html = '<div class="bilan"><b>' + lignes.length + '</b> sur ' + tout.length + (type === 'cine' ? ' · <b>' + places + '</b> place' + (places > 1 ? 's' : '') : '') +
+      ' · <button type="button" id="csv" style="color:var(--lav);text-decoration:underline">Exporter en CSV</button></div>';
+    if (!lignes.length) html += '<div class="vide">Aucun résultat.</div>';
+    lignes.forEach(function (l) {
+      var code = String(l['Code']);
+      var n = type === 'cine' ? '<span class="n" title="Places">' + esc(l['Places']) + '</span>' : '';
+      html += '<article class="pers" data-code="' + esc(code) + '"><button type="button" aria-expanded="' + (ouverte === code) + '">' + n +
+        '<span class="nom"><b>' + esc(l['Prénom'] + ' ' + l['Nom']) + '</b><small>' + esc(code) + ' · ' + esc(type === 'cine' ? l['Profil'] : l['Masterclass']) + '</small></span>' + pastille(l) + '</button>';
+      if (ouverte === code) html += fiche(l);
+      html += '</article>';
+    });
+    $('liste').innerHTML = html;
+  }
+  function fiche(l) {
+    var champs = Object.keys(l).filter(function (k) { return !CHAMPS_CACHES[k] && String(l[k]) !== ''; });
+    var dl = champs.map(function (k) { return '<dt>' + esc(k) + '</dt><dd>' + esc(l[k]) + '</dd>'; }).join('') + '<dt>Inscrit le</dt><dd>' + esc(l['Date']) + '</dd>';
+    var statuts = type === 'cine' ? ['Inscrit', 'Confirmé', 'Annulé'] : ['Candidature', 'Retenu', 'Refusé', 'Annulé'];
+    var opts = statuts.map(function (s) { return '<option' + (s === l['Statut'] ? ' selected' : '') + '>' + s + '</option>'; }).join('');
+    var tel = String(l['Téléphone']).replace(/[^\d+]/g, '');
+    var peutEntrer = !present(l) && l['Statut'] !== 'Annulé' && l['Statut'] !== 'Refusé' && l['Statut'] !== 'Candidature';
+    return '<div class="fiche"><dl>' + dl + '</dl><div class="actions">' +
+      (peutEntrer ? '<button type="button" class="btn petit" data-act="entree">Valider l\'entrée</button>' : '') +
+      (present(l) ? '<button type="button" class="btn petit sec" data-act="retirer">Annuler l\'entrée</button>' : '') +
+      '<select aria-label="Statut" id="sel-statut">' + opts + '</select><button type="button" class="btn petit sec" data-act="statut">Enregistrer le statut</button>' +
+      (tel ? '<a class="btn petit sec" href="tel:' + esc(tel) + '">Appeler</a>' : '') +
+      '<a class="btn petit sec" href="mailto:' + esc(l['E-mail']) + '">E-mail</a></div></div>';
+  }
+  $('liste').addEventListener('click', function (e) {
+    if (e.target.id === 'csv') { exporter(); return; }
+    var art = e.target.closest('.pers'); if (!art) return;
+    var code = art.dataset.code, act = e.target.closest('[data-act]');
+    if (act) {
+      act.disabled = true;
+      var fin = function () { charger(); };
+      if (act.dataset.act === 'entree') appel({ a: 'checkin', c: code }, fin);
+      else if (act.dataset.act === 'retirer') appel({ a: 'retirer', c: code }, fin);
+      else if (act.dataset.act === 'statut') appel({ a: 'statut', c: code, s: art.querySelector('#sel-statut').value }, function (r) { if (r && !r.ok) erreur('Statut non enregistré.'); fin(); });
+      return;
+    }
+    if (e.target.closest('.pers>button')) { ouverte = ouverte === code ? null : code; dessinerListe(); }
+  });
+  $('filtres').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; filtre = b.dataset.f; ouverte = null; dessinerListe(); });
+  $('recherche').addEventListener('input', function () { dessinerListe(); });
+  $('v-liste').querySelector('.seg').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    type = b.dataset.t; filtre = 'tous'; ouverte = null;
+    [].forEach.call(this.querySelectorAll('button'), function (x) { x.setAttribute('aria-selected', x === b); });
+    dessinerListe();
+  });
+  function exporter() {
+    var l = donnees[type] || []; if (!l.length) return;
+    var cols = Object.keys(l[0]);
+    var csv = [cols].concat(l.map(function (x) { return cols.map(function (c) { return x[c]; }); })).map(function (r) {
+      return r.map(function (v) { v = String(v == null ? '' : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; }).join(';');
+    }).join('\r\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'bomlaah-' + (type === 'cine' ? 'cine-concert' : 'masterclass') + '.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+
+  /* ---------- places ---------- */
+  function jauge(v, max) {
+    var p = max ? Math.min(100, Math.round(v / max * 100)) : 0;
+    return '<div class="jauge' + (max && v >= max ? ' plein' : '') + '"><i style="width:' + p + '%"></i></div>';
+  }
+  function dessinerPlaces() {
+    var p = donnees.places; if (!p || !p.cine) { $('places').innerHTML = '<div class="vide">Chargement…</div>'; return; }
+    var c = p.cine, m = p.master;
+    var capC = c.capacite ? ' / ' + c.capacite : '';
+    var html = '<div class="carte"><h2>Ciné-concert · le soir</h2><div class="gros"><b>' + c.places + '</b><span>place' + (c.places > 1 ? 's' : '') + ' réservée' + (c.places > 1 ? 's' : '') + capC + '</span></div>' +
+      (c.capacite ? jauge(c.places, c.capacite) + '<small style="color:var(--txt-2)">' + c.restantes + ' place' + (c.restantes > 1 ? 's' : '') + ' restante' + (c.restantes > 1 ? 's' : '') + '</small>' : '') +
+      '<div class="mini"><div><b>' + c.reservations + '</b><small>réservations</small></div><div><b>' + c.confirmees + '</b><small>places confirmées</small></div><div><b>' + c.placesPresentes + '</b><small>places entrées</small></div></div></div>';
+    html += '<div class="carte"><h2>Masterclass · le jour</h2><div class="gros"><b>' + m.retenus + '</b><span>retenu' + (m.retenus > 1 ? 's' : '') + ' sur ' + m.capacite + ' places</span></div>' + jauge(m.retenus, m.capacite) +
+      '<div class="mini"><div><b>' + m.candidatures + '</b><small>candidatures</small></div><div><b>' + (m.capacite - m.retenus) + '</b><small>places libres</small></div><div><b>' + m.presents + '</b><small>entrés</small></div></div><div style="margin-top:12px">';
+    m.par.forEach(function (x) {
+      html += '<div class="mc-l"><div class="t"><span>' + esc(x.nom) + '</span><span>' + x.retenus + ' / ' + x.capacite + '</span></div>' + jauge(x.retenus, x.capacite) +
+        '<small>' + x.candidatures + ' candidature' + (x.candidatures > 1 ? 's' : '') + ' · ' + x.restantes + ' place' + (x.restantes > 1 ? 's' : '') + ' libre' + (x.restantes > 1 ? 's' : '') + ' · ' + x.presents + ' entré' + (x.presents > 1 ? 's' : '') + '</small></div>';
+    });
+    $('places').innerHTML = html + '</div></div>';
+  }
+  setInterval(function () { if (!document.hidden && api && cle && vueCourante !== 'scan') charger(); }, 30000);
+})();
+</script>
+</body>
+</html>

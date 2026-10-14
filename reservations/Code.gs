@@ -1,5 +1,5 @@
 /**
- * ABIDJAN SYMPHONY — Réservations (Google Sheet + e-mails + billet QR + accueil)
+ * BOMLAAH — Réservations (Google Sheet + e-mails + billet QR + accueil)
  *
  * Ce script reçoit les réservations du site, les enregistre dans ce Google Sheet, puis :
  *   - envoie une confirmation à la personne (avec son code et un lien vers son billet QR)
@@ -20,7 +20,16 @@ const CONFIG = {
   REPONDRE_A: '',                         // optionnel : adresse qui reçoit les réponses des inscrits
   DATE_EVENEMENT: '2026-11-13',           // AAAA-MM-JJ
   DATE_AFFICHEE: 'vendredi 13 novembre 2026',
-  LIEU: 'YELAM’S, Abidjan',
+  LIEU: 'YELAM’S, Treichville, Abidjan',
+  PLACES_CINECONCERT: 0,                  // capacité de la salle pour le ciné-concert (0 = non précisée : on compte seulement les places réservées)
+  PLACES_PAR_MASTERCLASS: 12,             // places par masterclass
+  MASTERCLASS: [                          // titres exacts du formulaire du site (assets/data.js)
+    "Droits d'auteur et économie de la création",
+    "Le métier de compositeur de musique à l'image",
+    "Opportunités de carrière",
+    "Réalisateur et compositeur : le film d'animation",
+    "Compositeur et réalisateur : le film de fiction"
+  ],
   HORAIRES: '',                           // optionnel, ex. 'Masterclass dès 9h · Ciné-concert à 19h'
   JOURS_RAPPELS: [5, 1],                  // rappels envoyés à J-5 et J-1
   HEURE_ENVOI_RAPPELS: 9,                 // heure d'envoi automatique (heure d'Abidjan)
@@ -38,8 +47,8 @@ const FORMULAIRES = {
   masterclass: {
     onglet: 'Masterclass',
     prefixe: 'MC',
-    colonnes: [['Prénom', 'prenom'], ['Nom', 'nom'], ['E-mail', 'email'], ['Téléphone', 'telephone'], ['Établissement', 'etablissement'], ['Filière et niveau', 'niveau'], ['Thématique', 'thematique'], ['Motivation', 'motivation']],
-    requis: ['prenom', 'nom', 'email', 'telephone', 'etablissement', 'niveau', 'thematique']
+    colonnes: [['Prénom', 'prenom'], ['Nom', 'nom'], ['E-mail', 'email'], ['Téléphone', 'telephone'], ['Vous êtes', 'statut'], ['Profil', 'profil'], ['Établissement', 'etablissement'], ['Filière et niveau', 'niveau'], ['Structure', 'structure'], ['Masterclass', 'thematique'], ['Motivation', 'motivation']],
+    requis: ['prenom', 'nom', 'email', 'telephone', 'statut', 'thematique']
   }
 };
 const ONGLET_BORD = 'Tableau de bord';
@@ -107,6 +116,10 @@ function valider_(type, p) {
   if (type === 'cineconcert') {
     const n = Number(p.places);
     if (!(n >= 1 && n <= 4) || n % 1 !== 0) return 'Nombre de places invalide';
+  } else if (/^étudiant/i.test(texte_(p.statut))) {
+    if (!texte_(p.etablissement) || !texte_(p.niveau)) return 'Établissement et filière requis pour un étudiant';
+  } else if (!texte_(p.profil)) {
+    return 'Profil requis';
   }
   return '';
 }
@@ -128,10 +141,10 @@ function envoyerConfirmation_(type, p, code) {
     bouton = '<p>' + bouton_(lienBillet_(code), 'Voir mon billet (QR code)') + '</p>';
     texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nMon billet : ' + lienBillet_(code) + '\nCode : ' + code + '\nDate : ' + CONFIG.DATE_AFFICHEE + '\nLieu : ' + CONFIG.LIEU + '\n\nÀ bientôt,\nBOMLAAH';
   } else {
-    lignes.push(['Thématique', h_(texte_(p.thematique))]);
+    lignes.push(['Masterclass', h_(texte_(p.thematique))]);
     sujet = 'Votre candidature · BOMLAAH';
-    intro = 'Nous avons bien reçu votre candidature aux masterclass. Les groupes sont limités à douze étudiants : vous recevrez une réponse par e-mail.';
-    texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nCode : ' + code + '\nThématique : ' + texte_(p.thematique) + '\n\nÀ bientôt,\nBOMLAAH';
+    intro = 'Nous avons bien reçu votre candidature aux masterclass. Chaque masterclass accueille douze participants : vous recevrez une réponse par e-mail.';
+    texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nCode : ' + code + '\nMasterclass : ' + texte_(p.thematique) + '\n\nÀ bientôt,\nBOMLAAH';
   }
   const html = gabarit_('Merci ' + prenom, '<p>' + h_(intro) + '</p>' + tableau_(lignes) + bouton +
     '<p style="color:#555;font-size:13px">Pensez à vérifier vos courriers indésirables si vous ne retrouvez pas nos messages.</p>');
@@ -148,7 +161,7 @@ function notifierEquipe_(type, p, code, feuille) {
     lignes = [['Nom', h_(nom)], ['E-mail', h_(texte_(p.email))], ['Téléphone', h_(texte_(p.telephone))], ['Places', String(Number(p.places))], ['Profil', h_(texte_(p.profil))], ['Code', h_(code)]];
   } else {
     sujet = 'Nouvelle candidature masterclass · ' + nom + ' · ' + tot.inscriptions + ' candidature(s)';
-    lignes = [['Nom', h_(nom)], ['E-mail', h_(texte_(p.email))], ['Téléphone', h_(texte_(p.telephone))], ['Établissement', h_(texte_(p.etablissement))], ['Filière', h_(texte_(p.niveau))], ['Thématique', h_(texte_(p.thematique))], ['Motivation', h_(texte_(p.motivation))], ['Code', h_(code)]];
+    lignes = [['Nom', h_(nom)], ['E-mail', h_(texte_(p.email))], ['Téléphone', h_(texte_(p.telephone))], ['Vous êtes', h_(texte_(p.statut))], ['Profil', h_(texte_(p.profil))], ['Établissement', h_(texte_(p.etablissement))], ['Filière', h_(texte_(p.niveau))], ['Structure', h_(texte_(p.structure))], ['Masterclass', h_(texte_(p.thematique))], ['Motivation', h_(texte_(p.motivation))], ['Code', h_(code)]];
   }
   const total = type === 'cineconcert'
     ? tot.inscriptions + ' réservation(s), ' + tot.places + ' place(s) au total'
@@ -213,7 +226,7 @@ function envoyerRappel_(type, t, l, jours) {
   const lignes = [['Code', '<b>' + h_(code) + '</b>'], ['Date', h_(CONFIG.DATE_AFFICHEE)], ['Lieu', h_(CONFIG.LIEU)]];
   if (CONFIG.HORAIRES) lignes.push(['Horaires', h_(CONFIG.HORAIRES)]);
   if (type === 'cineconcert') lignes.push(['Places', String(l[t.col['Places']])]);
-  else lignes.push(['Thématique', h_(String(l[t.col['Thématique']]))]);
+  else lignes.push(['Masterclass', h_(String(l[t.col['Masterclass']]))]);
 
   const oui = lienAction_(code, 'oui'), non = lienAction_(code, 'non');
   const boutons = oui ? '<p>' + bouton_(oui, 'Oui, je viens') + ' ' + bouton_(non, 'Je ne pourrai pas venir', true) + '</p>' : '';
@@ -235,6 +248,10 @@ function doGet(e) {
   if (a === 'billet') return reponse_(billet_(p.c), p.callback);      // page « billet » du site (JSONP)
   if (a === 'checkin') return reponse_(checkin_(p.c, p.k), p.callback); // page « accueil » du site (JSONP)
   if (a === 'stats') return reponse_(stats_(p.k), p.callback);
+  if (a === 'liste') return reponse_(liste_(p.k), p.callback);          // application organisateurs : tous les inscrits
+  if (a === 'places') return reponse_(places_(p.k), p.callback);        // places réservées / restantes
+  if (a === 'statut') return reponse_(changerStatut_(p.c, p.s, p.k), p.callback);
+  if (a === 'retirer') return reponse_(retirerPresence_(p.c, p.k), p.callback);
   return page_('BOMLAAH', '<p>Ce lien n\'est pas valide.</p>');
 }
 
@@ -262,7 +279,8 @@ function checkin_(code, cle) {
     const f = trouverParCode_(c);
     if (!f) return { ok: false, etat: 'inconnu' };
     const t = f.t, l = f.ligne, statut = String(l[t.col['Statut']]);
-    const info = { prenom: String(l[t.col['Prénom']]), nom: String(l[t.col['Nom']]), places: f.type === 'cineconcert' ? Number(l[t.col['Places']]) || 1 : 0, type: f.type, code: c };
+    const info = { prenom: String(l[t.col['Prénom']]), nom: String(l[t.col['Nom']]), places: f.type === 'cineconcert' ? Number(l[t.col['Places']]) || 1 : 0, type: f.type, code: c,
+      detail: f.type === 'cineconcert' ? String(l[t.col['Profil']] || '') : String(l[t.col['Masterclass']] || '') };
     if (statut === 'Annulé') return Object.assign({ ok: false, etat: 'annule' }, info);
     if (statut === 'Candidature' || statut === 'Refusé') return Object.assign({ ok: false, etat: 'non_retenu' }, info);
     const deja = String(l[t.col['Présent']] || '');
@@ -328,6 +346,110 @@ function trouverParCode_(code) {
   return null;
 }
 
+/* ============================ Application organisateurs ============================ */
+
+const STATUTS_POSSIBLES = { cineconcert: ['Inscrit', 'Confirmé', 'Annulé'], masterclass: ['Candidature', 'Retenu', 'Refusé', 'Annulé'] };
+
+function cleOk_(cle) { return !!CONFIG.CLE_ACCUEIL && String(cle || '') === CONFIG.CLE_ACCUEIL; }
+
+/** Toutes les lignes d'un onglet, sous forme d'objets { 'Prénom': 'Awa', … }. */
+function lignes_(type) {
+  const feuille = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(FORMULAIRES[type].onglet);
+  if (!feuille || feuille.getLastRow() < 2) return [];
+  const t = table_(feuille), e = t.valeurs[0];
+  return t.valeurs.slice(1).filter(l => l[t.col['Code']]).map(l => {
+    const o = {};
+    e.forEach((h, i) => {
+      let v = l[i];
+      if (v instanceof Date) v = Utilities.formatDate(v, CONFIG.FUSEAU, 'dd/MM/yyyy HH:mm');
+      o[h] = v;
+    });
+    return o;
+  });
+}
+
+/** Liste complète des inscrits : réservée à l'équipe (clé d'accueil). */
+function liste_(cle) {
+  if (!cleOk_(cle)) return { ok: false, etat: 'refuse' };
+  return { ok: true, cine: lignes_('cineconcert'), master: lignes_('masterclass'), places: places_(cle) };
+}
+
+/** Places du ciné-concert et de chaque masterclass. */
+function places_(cle) {
+  if (!cleOk_(cle)) return { ok: false, etat: 'refuse' };
+  const cine = lignes_('cineconcert'), master = lignes_('masterclass');
+  const actifs = cine.filter(l => l['Statut'] !== 'Annulé');
+  const n = l => Number(l['Places']) || 1;
+  const placesCine = actifs.reduce((s, l) => s + n(l), 0);
+  const cap = Number(CONFIG.PLACES_CINECONCERT) || 0;
+  const presentsCine = actifs.filter(l => String(l['Présent'] || ''));
+  const c = {
+    reservations: actifs.length, places: placesCine, annulees: cine.length - actifs.length,
+    confirmees: actifs.filter(l => l['Statut'] === 'Confirmé').reduce((s, l) => s + n(l), 0),
+    presents: presentsCine.length, placesPresentes: presentsCine.reduce((s, l) => s + n(l), 0),
+    capacite: cap, restantes: cap ? Math.max(cap - placesCine, 0) : null
+  };
+  const noms = CONFIG.MASTERCLASS.slice();
+  master.forEach(l => { const m = String(l['Masterclass'] || ''); if (m && noms.indexOf(m) === -1) noms.push(m); });
+  const cp = Number(CONFIG.PLACES_PAR_MASTERCLASS) || 12;
+  const par = noms.map(nom => {
+    const l = master.filter(x => String(x['Masterclass']) === nom && x['Statut'] !== 'Annulé' && x['Statut'] !== 'Refusé');
+    const retenus = l.filter(x => ['Retenu', 'Confirmé'].indexOf(x['Statut']) !== -1).length;
+    return { nom: nom, candidatures: l.length, retenus: retenus, presents: l.filter(x => String(x['Présent'] || '')).length, capacite: cp, restantes: Math.max(cp - retenus, 0) };
+  });
+  const m = {
+    candidatures: par.reduce((s, x) => s + x.candidatures, 0), retenus: par.reduce((s, x) => s + x.retenus, 0),
+    presents: par.reduce((s, x) => s + x.presents, 0), capacite: cp * noms.length, par: par
+  };
+  return { ok: true, cine: c, master: m };
+}
+
+/** Change le statut d'une ligne (ex. « Retenu » pour une masterclass). Un candidat retenu reçoit son billet par e-mail. */
+function changerStatut_(code, statut, cle) {
+  if (!cleOk_(cle)) return { ok: false, etat: 'refuse' };
+  const c = String(code || '').trim().toUpperCase();
+  if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(c)) return { ok: false, etat: 'inconnu' };
+  const verrou = LockService.getScriptLock();
+  verrou.waitLock(15000);
+  try {
+    const f = trouverParCode_(c);
+    if (!f) return { ok: false, etat: 'inconnu' };
+    if (STATUTS_POSSIBLES[f.type].indexOf(String(statut)) === -1) return { ok: false, etat: 'statut_invalide' };
+    const ancien = String(f.ligne[f.t.col['Statut']]);
+    f.feuille.getRange(f.numero, f.t.col['Statut'] + 1).setValue(statut);
+    if (f.type === 'masterclass' && statut === 'Retenu' && ancien !== 'Retenu') envoyerRetenu_(f);
+    return { ok: true, code: c, statut: String(statut), ancien: ancien };
+  } finally {
+    verrou.releaseLock();
+  }
+}
+
+function envoyerRetenu_(f) {
+  const l = f.ligne, t = f.t, prenom = l[t.col['Prénom']], code = l[t.col['Code']];
+  const lignes = [['Code', '<b>' + h_(code) + '</b>'], ['Masterclass', h_(String(l[t.col['Masterclass']]))], ['Date', h_(CONFIG.DATE_AFFICHEE)], ['Lieu', h_(CONFIG.LIEU)]];
+  const intro = "Bonne nouvelle : votre candidature est retenue. Votre billet est un QR code à présenter à l'entrée de la masterclass.";
+  const html = gabarit_('Vous êtes retenu(e), ' + prenom, '<p>' + h_(intro) + '</p>' + tableau_(lignes) + '<p>' + bouton_(lienBillet_(code), 'Voir mon billet (QR code)') + '</p>');
+  const texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nMon billet : ' + lienBillet_(code) + '\nCode : ' + code + '\n\nÀ bientôt,\nBOMLAAH';
+  envoyer_(texte_(l[t.col['E-mail']]), 'Votre place à la masterclass · BOMLAAH', texte, html);
+}
+
+/** Annule un scan fait par erreur. */
+function retirerPresence_(code, cle) {
+  if (!cleOk_(cle)) return { ok: false, etat: 'refuse' };
+  const c = String(code || '').trim().toUpperCase();
+  if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(c)) return { ok: false, etat: 'inconnu' };
+  const verrou = LockService.getScriptLock();
+  verrou.waitLock(15000);
+  try {
+    const f = trouverParCode_(c);
+    if (!f) return { ok: false, etat: 'inconnu' };
+    f.feuille.getRange(f.numero, f.t.col['Présent'] + 1).setValue('');
+    return { ok: true, code: c };
+  } finally {
+    verrou.releaseLock();
+  }
+}
+
 /* ============================ Installation ============================ */
 
 function preparerFeuilles() {
@@ -354,7 +476,7 @@ function emailDeTest() {
 
 function lienAccueil() {
   if (!CONFIG.CLE_ACCUEIL) { alerte_('Renseignez d\'abord CLE_ACCUEIL dans le script.'); return; }
-  alerte_('Page d\'accueil à ouvrir sur le téléphone de l\'équipe (ne la partagez qu\'au personnel) :\n\n' + CONFIG.URL_SITE + 'scan/#k=' + CONFIG.CLE_ACCUEIL);
+  alerte_('Application organisateurs (scan, inscrits, places) à ouvrir sur le téléphone de l\'équipe (ne la partagez qu\'au personnel) :\n\n' + CONFIG.URL_SITE + 'organisateurs/#k=' + CONFIG.CLE_ACCUEIL);
 }
 
 function onOpen() {
@@ -363,7 +485,7 @@ function onOpen() {
     .addItem('2. Envoyer un e-mail de test', 'emailDeTest')
     .addItem('3. Activer les rappels automatiques', 'installerDeclencheurs')
     .addSeparator()
-    .addItem('Lien de la page d\'accueil (scan)', 'lienAccueil')
+    .addItem('Lien de l\'application organisateurs', 'lienAccueil')
     .addItem('Envoyer les rappels maintenant', 'rappelsMaintenant')
     .addToUi();
 }
@@ -426,7 +548,7 @@ function tableauDeBord_() {
   const A = "'" + FORMULAIRES.cineconcert.onglet + "'!", M = "'" + FORMULAIRES.masterclass.onglet + "'!";
   const col = (pre, c) => pre + c + '2:' + c;
   const lignes = [
-    ['ABIDJAN SYMPHONY · TABLEAU DE BORD', ''],
+    ['BOMLAAH · TABLEAU DE BORD', ''],
     ['', ''],
     ['CINÉ-CONCERT', ''],
     ['Réservations', '=COUNTA(' + col(A, cc['Code']) + ')'],
@@ -516,7 +638,7 @@ function gabarit_(titre, corps) {
     '<div style="max-width:560px;margin:auto;background:#ffffff;border-radius:12px;overflow:hidden">' +
     '<div style="background:#101018;color:#fff;padding:20px 24px;font-size:20px;font-weight:bold">BOMLAAH</div>' +
     '<div style="padding:24px;line-height:1.6;font-size:15px"><h2 style="margin:0 0 12px;font-size:20px">' + h_(titre) + '</h2>' + corps + '</div>' +
-    '<div style="padding:14px 24px;background:#EDE6F5;font-size:12px;color:#555">MYLL Productions · en coproduction avec le YELAM’S · Abidjan, Côte d\'Ivoire</div></div></div>';
+    '<div style="padding:14px 24px;background:#EDE6F5;font-size:12px;color:#555">MYLL Production · en coproduction avec YELAM’S Créative · Abidjan, Côte d\'Ivoire</div></div></div>';
 }
 
 function page_(titre, corps) {
