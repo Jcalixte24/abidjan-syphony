@@ -1,90 +1,51 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
+      "src": "/",
       "has": [
         {
           "type": "host",
           "value": "admin.bomlaah.com"
         }
       ],
-      "destination": "/organisateurs/index.html"
+      "dest": "/organisateurs/index.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow, noarchive",
+        "Cache-Control": "no-store"
+      }
     },
     {
-      "source": "/",
+      "src": "/",
       "has": [
         {
           "type": "host",
           "value": "scan.bomlaah.com"
         }
       ],
-      "destination": "/scan/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/organisateurs/(.*)",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
-      ]
+      "dest": "/scan/index.html",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow, noarchive",
+        "Cache-Control": "no-store"
+      }
     },
     {
-      "source": "/scan/(.*)",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
-      ]
+      "src": "/organisateurs/(.*)",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow, noarchive",
+        "Cache-Control": "no-store"
+      },
+      "continue": true
     },
     {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "admin.bomlaah.com"
-        }
-      ],
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
-      ]
+      "src": "/scan/(.*)",
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow, noarchive",
+        "Cache-Control": "no-store"
+      },
+      "continue": true
     },
     {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "scan.bomlaah.com"
-        }
-      ],
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "no-store"
-        }
-      ]
+      "handle": "filesystem"
     }
   ]
 }

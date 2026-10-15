@@ -78,16 +78,15 @@ def main():
     # 3. vercel.json : un seul site, trois noms de domaine
     h_org, h_scan = '%s.%s' % (a.organisateurs, d), '%s.%s' % (a.scan, d)
     prive = [{'key': 'X-Robots-Tag', 'value': 'noindex, nofollow, noarchive'}, {'key': 'Cache-Control', 'value': 'no-store'}]
+    prive_h = {x['key']: x['value'] for x in prive}
+    # « routes » passe avant les fichiers : sans cela, « / » afficherait toujours l'accueil, même sur admin.* et scan.*
     vercel = {
-        'rewrites': [
-            {'source': '/', 'has': [{'type': 'host', 'value': h_org}], 'destination': '/organisateurs/index.html'},
-            {'source': '/', 'has': [{'type': 'host', 'value': h_scan}], 'destination': '/scan/index.html'},
-        ],
-        'headers': [
-            {'source': '/organisateurs/(.*)', 'headers': prive},
-            {'source': '/scan/(.*)', 'headers': prive},
-            {'source': '/', 'has': [{'type': 'host', 'value': h_org}], 'headers': prive},
-            {'source': '/', 'has': [{'type': 'host', 'value': h_scan}], 'headers': prive},
+        'routes': [
+            {'src': '/', 'has': [{'type': 'host', 'value': h_org}], 'dest': '/organisateurs/index.html', 'headers': prive_h},
+            {'src': '/', 'has': [{'type': 'host', 'value': h_scan}], 'dest': '/scan/index.html', 'headers': prive_h},
+            {'src': '/organisateurs/(.*)', 'headers': prive_h, 'continue': True},
+            {'src': '/scan/(.*)', 'headers': prive_h, 'continue': True},
+            {'handle': 'filesystem'},
         ],
     }
     ecrire(os.path.join(RACINE, 'vercel.json'), json.dumps(vercel, indent=2, ensure_ascii=False) + '\n', a.simuler); modifies.append('vercel.json')
