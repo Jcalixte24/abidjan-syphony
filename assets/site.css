@@ -1010,3 +1010,15 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 .bio p{margin-top:.8rem;font-size:.93rem;line-height:1.7;color:var(--txt-2)}
 @media (max-width:1020px){.team{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:620px){.team{grid-template-columns:1fr}.pers-photo{aspect-ratio:1/1}}
+
+/* MYLL Production × YELAM'S */
+.logos-h{display:flex;align-items:center;justify-content:center;gap:1.1rem;margin-top:.6rem}
+.logos-h img{height:clamp(34px,4.6vw,56px);width:auto}
+.logos-h .x,.credits dd.cr-logo .x{font-family:var(--disp);font-weight:700;font-size:1.6rem;color:var(--lav)}
+.credits dd.cr-logo{display:flex;align-items:center;justify-content:center;gap:1.1rem}
+.credits dd.cr-logo img{height:56px;width:auto}
+.p-yel{width:clamp(110px,13vw,170px)}
+.lieu-solo{grid-template-columns:1fr;justify-items:center}
+.lieu-solo .ticket-wrap{width:min(100%,560px)}
+.orga-g .porteur p{max-width:none}
+@media (max-width:620px){.logos-h img{height:30px}}

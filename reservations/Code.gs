@@ -64,15 +64,44 @@ const ALPHABET_CODE = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 
 /* ============================ Réception du formulaire ============================ */
 
+/** Anti-robot : au plus 30 demandes par minute au total et 5 par adresse e-mail et par 10 minutes. */
+function limiter_(email) {
+  try {
+    const c = CacheService.getScriptCache(), kg = 'rl_g', ke = 'rl_' + email;
+    const g = Number(c.get(kg) || 0), e = Number(c.get(ke) || 0);
+    if (g >= 30 || e >= 5) return false;
+    c.put(kg, String(g + 1), 60); c.put(ke, String(e + 1), 600);
+  } catch (err) { console.warn('limiteur indisponible', err); }
+  return true;
+}
+
+/** E-mail « déjà enregistré » : renvoie le code existant. Retourne false si l'e-mail n'a pas pu partir. */
+function mailDoublon_(type, p, code) {
+  try {
+    const intro = type === 'masterclass'
+      ? 'Vous avez déjà candidaté à cette masterclass : une seule réservation par personne. Votre candidature est enregistrée sous le code ' + code + '.'
+      : 'Votre réservation est déjà enregistrée sous le code ' + code + '. Voici de nouveau votre billet.';
+    envoyer_(texte_(p.email), (type === 'masterclass' ? 'Votre candidature' : 'Votre billet') + ' · BOMLAAH', 'Bonjour ' + texte_(p.prenom) + ',\n\n' + intro + '\n\nMon billet : ' + lienBillet_(code) + '\n\nBOMLAAH',
+      gabarit_('Déjà enregistré', '<p>' + h_(intro) + '</p><p>' + bouton_(lienBillet_(code), type === 'masterclass' ? 'Voir ma candidature' : 'Voir mon billet (QR code)') + '</p>'));
+    return true;
+  } catch (err) { console.error('doublon', err); return false; }
+}
+
+/** Réception d'un formulaire (envoi classique en POST). */
 function doPost(e) {
+  return json_(inscrire_((e && e.parameter) || {}));
+}
+
+/** Enregistre une réservation ou une candidature et renvoie un résultat que le site peut lire : { ok, code, mail } ou { ok:false, erreur }. */
+function inscrire_(p) {
   const verrou = LockService.getScriptLock();
   try {
     verrou.waitLock(20000);
-    const p = (e && e.parameter) || {};
-    if (p._gotcha) return json_({ ok: true });                       // robot : on ignore en silence
+    if (p._gotcha) return { ok: true };                       // robot : on ignore en silence
     const type = p.formulaire === 'masterclass' ? 'masterclass' : 'cineconcert';
+    if (!limiter_(texte_(p.email).toLowerCase())) return { ok: false, erreur: 'trop_de_demandes' };
     const erreur = valider_(type, p);
-    if (erreur) return json_({ ok: false, erreur: erreur });
+    if (erreur) return { ok: false, erreur: erreur };
 
     const f = FORMULAIRES[type];
     const feuille = feuille_(type);
@@ -83,26 +112,21 @@ function doPost(e) {
     const cleDoublon = f.colonnes.map(c => texte_(p[c[1]]).toLowerCase()).join('|');
     const existante = t.valeurs.slice(1).find(l => String(l[t.col['E-mail']]).toLowerCase() === email &&
       f.colonnes.map(c => String(l[t.col[c[0]]]).toLowerCase()).join('|') === cleDoublon);
-    if (existante) return json_({ ok: true, code: existante[t.col['Code']], doublon: true });
+    if (existante) return { ok: true, code: existante[t.col['Code']], doublon: true, mail: mailDoublon_(type, p, existante[t.col['Code']]) };
     if (type === 'masterclass') {      // une réservation par personne et par masterclass : un doublon ne crée pas de ligne, la personne reçoit son code
       const nomMc = texte_(p.thematique).toLowerCase();
       const deja = t.valeurs.slice(1).find(l => String(l[t.col['E-mail']]).toLowerCase() === email && String(l[t.col['Masterclass']]).toLowerCase() === nomMc &&
         ['Annulé', 'Refusé'].indexOf(String(l[t.col['Statut']])) === -1);
-      if (deja) {
-        const c0 = deja[t.col['Code']], intro = 'Vous avez déjà candidaté à cette masterclass : une seule réservation par personne. Votre candidature est enregistrée sous le code ' + c0 + '.';
-        envoyer_(texte_(p.email), 'Votre candidature · BOMLAAH', 'Bonjour ' + texte_(p.prenom) + ',\n\n' + intro + '\n\nBOMLAAH',
-          gabarit_('Déjà enregistré', '<p>' + h_(intro) + '</p><p>' + bouton_(lienBillet_(c0), 'Voir ma candidature') + '</p>'));
-        return json_({ ok: true, code: c0, doublon: true });
-      }
+      if (deja) return { ok: true, code: deja[t.col['Code']], doublon: true, mail: mailDoublon_(type, p, deja[t.col['Code']]) };
     }
 
     const rg = reglages_();
-    if ((type === 'cineconcert' && rg.cine.ferme) || (type === 'masterclass' && rg.master.ferme)) return json_({ ok: false, erreur: 'ferme' });
+    if ((type === 'cineconcert' && rg.cine.ferme) || (type === 'masterclass' && rg.master.ferme)) return { ok: false, erreur: 'ferme' };
     if (type === 'cineconcert') {
-      const cap = reglages_().cine.capacite;
+      const cap = rg.cine.capacite;
       if (cap) {
         const pris = lignes_('cineconcert').filter(l => l['Statut'] !== 'Annulé').reduce((s, l) => s + (Number(l['Places']) || 1), 0);
-        if (pris + Number(p.places) > cap) return json_({ ok: false, erreur: 'complet', restantes: Math.max(cap - pris, 0) });
+        if (pris + Number(p.places) > cap) return { ok: false, erreur: 'complet', restantes: Math.max(cap - pris, 0) };
       }
     }
 
@@ -124,12 +148,15 @@ function doPost(e) {
     zone.setNumberFormats([ligne.map((v, i) => i === 0 ? 'dd/mm/yyyy hh:mm' : eh[i] === 'Places' ? '0' : '@')]);
     zone.setValues([ligne]);
 
-    envoyerConfirmation_(type, p, code);
-    notifierEquipe_(type, p, code, feuille);
-    return json_({ ok: true, code: code });
+    verrou.releaseLock();   // la ligne est écrite : on libère le verrou avant d'envoyer les e-mails (plus lents), pour ne pas bloquer les autres réservations
+    // Un e-mail qui ne part pas (quota, adresse refusée) ne doit jamais faire perdre la réservation, déjà enregistrée.
+    let mail = true;
+    try { envoyerConfirmation_(type, p, code); } catch (err) { mail = false; console.error('confirmation', err); }
+    try { notifierEquipe_(type, p, code, feuille); } catch (err) { console.error('alerte équipe', err); }
+    return { ok: true, code: code, mail: mail };
   } catch (err) {
     console.error(err);
-    return json_({ ok: false, erreur: 'Erreur serveur' });
+    return { ok: false, erreur: 'Erreur serveur' };
   } finally {
     verrou.releaseLock();
   }
@@ -277,6 +304,7 @@ function doGet(e) {
   if (a === 'billet') return reponse_(billet_(p.code), p.callback);      // page « billet » du site (JSONP)
   if (a === 'checkin') return reponse_(checkin_(p.code, p.k), p.callback); // page « accueil » du site (JSONP)
   if (a === 'stats') return reponse_(stats_(p.k), p.callback);
+  if (a === 'inscrire') return reponse_(inscrire_(p), p.callback);      // formulaire du site : le site lit la réponse (complet, fermé, doublon…)
   if (a === 'dispo') return reponse_(dispo_(), p.callback);               // places restantes du ciné-concert (public, aucune donnée personnelle)
   if (a === 'liste') return reponse_(liste_(p.k), p.callback);          // application organisateurs : tous les inscrits
   if (a === 'places') return reponse_(places_(p.k), p.callback);        // places réservées / restantes

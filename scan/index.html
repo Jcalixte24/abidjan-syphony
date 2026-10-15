@@ -44,6 +44,9 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .bas{display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:#000;border-top:1px solid #222}
 .bas input{flex:1;min-width:0;height:50px;border-radius:14px;border:1px solid #444;background:#111;color:#fff;font:700 1.1rem "Courier New",monospace;letter-spacing:.08em;padding:0 14px;text-transform:uppercase}
 .bas input::placeholder{color:#777;font-weight:400;letter-spacing:.02em}
+.oubli{margin-left:auto;margin-right:12px;padding:.35rem .8rem;border-radius:999px;border:1px solid #444;background:#111;color:#bbb;font:600 .78rem var(--disp)}
+.cleform{display:flex;gap:10px;width:min(100%,360px)}
+.cleform input{flex:1;min-width:0;height:50px;border-radius:14px;border:1px solid #444;background:#111;color:#fff;padding:0 14px;font-size:16px}
 .msg{padding:6px 16px;font-size:.85rem;color:#f2b8b8;background:#2a0f0f;display:none}
 .msg.on{display:block}
 [hidden]{display:none!important}
@@ -52,6 +55,7 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 <body>
 <header>
   <b>BOMLAAH · Scan</b>
+  <button type="button" id="oubli" class="oubli" title="Oublier la clé sur cet appareil" hidden>Quitter</button>
   <div class="compteur" id="compteur" aria-live="polite">Entrés<br><strong>–</strong></div>
 </header>
 <div class="msg" id="msg" role="alert"></div>
@@ -62,6 +66,7 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   <div class="demarrer" id="demarrer">
     <p id="consigne">Scannez le QR code du billet. La caméra s'ouvre quand vous appuyez sur le bouton.</p>
     <button class="btn" id="btnCamera" type="button">Ouvrir la caméra</button>
+    <form id="formCle" class="cleform" hidden><input id="cleSaisie" type="password" placeholder="Clé d'accueil" aria-label="Clé d'accueil" autocomplete="off"><button class="btn" type="submit">Entrer</button></form>
   </div>
   <div class="resultat" id="resultat" role="status" aria-live="assertive">
     <div class="titre" id="rTitre"></div>
@@ -88,8 +93,8 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   var cle = '';
   try {
     var m = location.hash.match(/k=([^&]+)/);
-    if (m) { cle = decodeURIComponent(m[1]); sessionStorage.setItem('asym_cle', cle); history.replaceState(null, '', location.pathname + location.search); }
-    else cle = sessionStorage.getItem('asym_cle') || '';
+    if (m) { cle = decodeURIComponent(m[1]); sessionStorage.setItem('asym_cle', cle); try { localStorage.setItem('asym_cle_scan', cle); } catch (x) {} history.replaceState(null, '', location.pathname + location.search); }
+    else { cle = sessionStorage.getItem('asym_cle') || ''; if (!cle) { try { cle = localStorage.getItem('asym_cle_scan') || ''; } catch (x) {} } }
   } catch (e) { var m2 = location.hash.match(/k=([^&]+)/); if (m2) cle = decodeURIComponent(m2[1]); }
   var api = window.ASYM_API || '';
   var video = $('video'), canvas = document.createElement('canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
@@ -97,8 +102,14 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
   function erreur(t) { var e = $('msg'); e.textContent = t; e.classList.toggle('on', !!t); }
   if (!api) erreur('Le système de réservation n\'est pas encore relié (config.js).');
-  else if (!cle) erreur('Clé d\'accueil absente : ouvrez la page avec le lien fourni par l\'équipe (menu « BOMLAAH » du Google Sheet).');
+  else if (!cle) { erreur('Clé d\'accueil absente : saisissez-la ci-dessous, ou ouvrez le lien fourni par l\'équipe (menu « BOMLAAH » du Google Sheet).'); $('formCle').hidden = false; }
+  $('formCle').addEventListener('submit', function (e) {
+    e.preventDefault(); var v = $('cleSaisie').value.trim(); if (!v) return;
+    cle = v; try { sessionStorage.setItem('asym_cle', v); localStorage.setItem('asym_cle_scan', v); } catch (x) {}
+    $('cleSaisie').value = ''; $('formCle').hidden = true; erreur(''); stats();
+  });
 
+  if (cle) { $('oubli').hidden = false; $('oubli').onclick = function () { try { sessionStorage.removeItem('asym_cle'); localStorage.removeItem('asym_cle_scan'); } catch (x) {} location.reload(); }; }
   function compteur(s) {
     if (!s || s.presents == null) return;
     $('compteur').innerHTML = 'Entrés<br><strong>' + (s.presents + (s.masterPresents || 0)) + '</strong> / ' + (s.reservations + (s.masterRetenus || 0));
@@ -125,8 +136,8 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     if (r.etat === 'ok') { z.classList.add('ok'); $('rTitre').textContent = 'ENTRÉE OK'; $('rDetail').textContent = info; bip(true); }
     else if (r.etat === 'deja') { z.classList.add('deja'); $('rTitre').textContent = 'DÉJÀ SCANNÉ'; $('rDetail').textContent = (r.heure ? 'Entré(e) le ' + r.heure : '') + (info ? ' · ' + info : ''); bip(false); }
     else { z.classList.add('non'); bip(false);
-      $('rTitre').textContent = r.etat === 'annule' ? 'RÉSERVATION ANNULÉE' : r.etat === 'non_retenu' ? 'NON RETENU' : r.etat === 'refuse' ? 'CLÉ REFUSÉE' : r.etat === 'reseau' ? 'PAS DE RÉSEAU' : 'BILLET INCONNU';
-      $('rDetail').textContent = r.etat === 'refuse' ? 'Rouvrez la page avec le lien d\'accueil fourni.' : r.etat === 'reseau' ? 'Vérifiez la connexion puis rescannez.' : ''; }
+      $('rTitre').textContent = r.etat === 'annule' ? 'RÉSERVATION ANNULÉE' : r.etat === 'non_retenu' ? 'NON RETENU' : r.etat === 'refuse' ? 'CLÉ REFUSÉE' : r.etat === 'sans_cle' ? 'CLÉ ABSENTE' : r.etat === 'reseau' ? 'PAS DE RÉSEAU' : 'BILLET INCONNU';
+      $('rDetail').textContent = r.etat === 'refuse' ? 'Cette clé n\'est pas valide : rouvrez le lien fourni par l\'équipe.' : r.etat === 'sans_cle' ? 'Saisissez la clé d\'accueil, ou rouvrez le lien fourni par l\'équipe.' : r.etat === 'reseau' ? 'Vérifiez la connexion puis rescannez.' : ''; }
     compteur(r);
     pause = true;
   }
@@ -136,7 +147,8 @@ video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
     code = String(code || '').trim().toUpperCase();
     if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(code)) { afficher({ etat: 'inconnu' }); return; }
     pause = true;
-    if (!api || !cle) { afficher({ etat: 'refuse' }); return; }
+    if (!api) { afficher({ etat: 'reseau' }); return; }
+    if (!cle) { afficher({ etat: 'sans_cle' }); return; }
     ASYM.jsonp(api + '?a=checkin&code=' + encodeURIComponent(code) + '&k=' + encodeURIComponent(cle), afficher, function () { afficher({ etat: 'reseau' }); });
   }
 

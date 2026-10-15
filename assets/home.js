@@ -228,18 +228,23 @@
     const t=v=>String(v||'').trim();
     const btn=form.querySelector('button[type=submit]'),label=btn.innerHTML;
     btn.disabled=true;btn.textContent='Envoi en cours…';
-    const code=ASYM.code(key==='masterclass'?'MC':'CC');
-    const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
-    try{
-      await fetch(API,{method:'POST',mode:'no-cors',signal:ctl.signal,body:new URLSearchParams({...d,formulaire:key,code})});
-    }catch(x){
-      err.textContent="L'envoi a échoué. Vérifiez votre connexion puis réessayez.";err.hidden=false;
-      return;
-    }finally{clearTimeout(to);btn.disabled=false;btn.innerHTML=label}
+    let code=ASYM.code(key==='masterclass'?'MC':'CC');
+    let r=null;
+    await new Promise(fin=>ASYM.jsonp(API+'?'+new URLSearchParams({...d,formulaire:key,code,a:'inscrire'}).toString(),x=>{r=x;fin()},()=>fin()));
+    btn.disabled=false;btn.innerHTML=label;
+    if(!r){err.textContent="Le serveur n'a pas répondu à temps. Si vous ne recevez pas d'e-mail de confirmation d'ici quelques minutes, réessayez : une réservation déjà enregistrée ne sera pas doublée.";err.hidden=false;return}
+    if(!r.ok){
+      err.textContent=r.erreur==='complet'?'Le ciné-concert est complet : toutes les places sont réservées.'
+        :r.erreur==='trop_de_demandes'?'Trop de demandes en peu de temps. Patientez quelques minutes puis réessayez.'
+        :r.erreur==='ferme'?(key==='masterclass'?'Les candidatures aux masterclass sont closes.':'Les réservations du ciné-concert sont closes.')
+        :"Votre demande n'a pas pu être enregistrée ("+(r.erreur||'erreur')+'). Vérifiez les champs puis réessayez.';
+      err.hidden=false;return;
+    }
+    code=r.code||code;
     const cine=key!=='masterclass',qr=ok.querySelector('.ok-qr'),save=ok.querySelector('[data-save-billet]'),wa=ok.querySelector('.wa-again');
     ok.querySelector('h3').textContent=cine?'Réservation enregistrée':'Candidature envoyée';
     ok.querySelector('.ok-msg').textContent=cine
-      ?`Merci ${t(d.prenom)}. Voici votre billet : présentez ce QR code à l'entrée. Un e-mail de confirmation est envoyé à ${t(d.email)} (pensez à vérifier vos courriers indésirables).`
+      ?`Merci ${t(d.prenom)}. Voici votre billet : présentez ce QR code à l'entrée. ${r.doublon?"Cette réservation existait déjà : votre code est conservé et un e-mail vous le renvoie.":''} ${r.mail===false?"L'e-mail de confirmation n'a pas pu partir : enregistrez votre billet ci-dessous, il suffit à l'entrée.":`Un e-mail de confirmation est envoyé à ${t(d.email)} (pensez à vérifier vos courriers indésirables).`}`
       :`Merci ${t(d.prenom)}. Votre candidature est bien reçue. Une seule réservation par personne et par masterclass. Un e-mail de confirmation, avec votre code, est envoyé à ${t(d.email)} ; vous recevrez ensuite une réponse.`;
     if(wa)wa.hidden=true;
     if(qr)qr.hidden=!cine;
