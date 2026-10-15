@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(curl:*)",
+      "mcp__Claude_Browser__javascript_tool"
+    ]
+  }
+}
