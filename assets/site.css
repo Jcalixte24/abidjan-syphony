@@ -1033,3 +1033,8 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 .pan-n{font-weight:600}
 .pers-photo[src$="illman-toure.jpg"]{object-position:22% 20%}
 @media (max-width:620px){.pan{min-height:260px}}
+
+.ins-liens{display:flex;flex-wrap:wrap;justify-content:center;gap:.8rem 1.8rem;margin:1.2rem 0 .4rem}
+.ins-liens a{display:inline-flex;align-items:center;gap:.6rem;font-weight:600;font-size:.95rem;color:var(--violet,#5B2BB0);text-decoration:none;padding:.5rem 0;border-bottom:1.5px solid currentColor}
+.ins-liens a i{display:inline-block;width:22px;height:1.5px;background:currentColor;transition:width .3s}
+.ins-liens a:hover i{width:38px}
