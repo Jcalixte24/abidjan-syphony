@@ -1022,3 +1022,6 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 .lieu-solo .ticket-wrap{width:min(100%,560px)}
 .orga-g .porteur p{max-width:none}
 @media (max-width:620px){.logos-h img{height:30px}}
+
+#curtain .cur-logos{opacity:0;animation:fadeUp .8s .15s forwards}
+#curtain .cur-logos .x{font-size:1.6rem;letter-spacing:0;text-transform:none;color:var(--lav);opacity:1;animation:none}
