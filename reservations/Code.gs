@@ -98,6 +98,7 @@ function inscrire_(p) {
   try {
     verrou.waitLock(20000);
     if (p._gotcha) return { ok: true };                       // robot : on ignore en silence
+    if (p.humain !== '1' || !(Number(p.delai) >= 2500)) return { ok: false, erreur: 'robot' };   // case « Je ne suis pas un robot » cochée et formulaire rempli en plus de 2,5 s
     const type = p.formulaire === 'masterclass' ? 'masterclass' : 'cineconcert';
     if (!limiter_(texte_(p.email).toLowerCase())) return { ok: false, erreur: 'trop_de_demandes' };
     const erreur = valider_(type, p);
@@ -310,6 +311,7 @@ function doGet(e) {
   if (a === 'places') return reponse_(places_(p.k), p.callback);        // places réservées / restantes
   if (a === 'statut') return reponse_(changerStatut_(p.code, p.s, p.k, p.m, p.f), p.callback);
   if (a === 'reglage') return reponse_(changerReglage_(p.cible, p.ferme, p.capacite, p.k), p.callback);
+  if (a === 'vider') return reponse_(viderBase_(p.k, p.confirmation), p.callback);   // organisateurs : vide les inscriptions (confirmation écrite obligatoire)
   if (a === 'retirer') return reponse_(retirerPresence_(p.code, p.k), p.callback);
   return page_('BOMLAAH', '<p>Ce lien n\'est pas valide.</p>');
 }
@@ -445,6 +447,22 @@ function changerReglage_(cible, ferme, capacite, cle) {
     p.setProperty('CAPACITE_CINE', String(n));
   }
   return { ok: true, reglages: reglages_() };
+}
+
+/** Supprime toutes les inscriptions (ciné-concert et masterclass). Exige la clé admin ET le mot « VIDER ». Les en-têtes et le tableau de bord restent. */
+function viderBase_(cle, confirmation) {
+  if (!cleOk_(cle)) return { ok: false, etat: 'refuse' };
+  if (String(confirmation || '') !== 'VIDER') return { ok: false, etat: 'confirmation_manquante' };
+  const verrou = LockService.getScriptLock();
+  try {
+    verrou.waitLock(20000);
+    let supprimes = 0;
+    ['cineconcert', 'masterclass'].forEach(type => {
+      const feuille = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(FORMULAIRES[type].onglet);
+      if (feuille && feuille.getLastRow() >= 2) { const n = feuille.getLastRow() - 1; feuille.deleteRows(2, n); supprimes += n; }
+    });
+    return { ok: true, supprimes: supprimes };
+  } catch (err) { console.error(err); return { ok: false, erreur: 'Erreur serveur' }; } finally { verrou.releaseLock(); }
 }
 
 function cleOk_(cle) { return !!CONFIG.CLE_ADMIN && String(cle || '') === CONFIG.CLE_ADMIN; }

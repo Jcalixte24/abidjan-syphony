@@ -236,6 +236,7 @@
     if(!r.ok){
       err.textContent=r.erreur==='complet'?'Le ciné-concert est complet : toutes les places sont réservées.'
         :r.erreur==='trop_de_demandes'?'Trop de demandes en peu de temps. Patientez quelques minutes puis réessayez.'
+        :r.erreur==='robot'?'Vérification impossible : cochez « Je ne suis pas un robot », prenez le temps de remplir le formulaire puis réessayez.'
         :r.erreur==='ferme'?(key==='masterclass'?'Les candidatures aux masterclass sont closes.':'Les réservations du ciné-concert sont closes.')
         :"Votre demande n'a pas pu être enregistrée ("+(r.erreur||'erreur')+'). Vérifiez les champs puis réessayez.';
       err.hidden=false;return;
@@ -265,6 +266,7 @@
       const sm=form.querySelector('.submit-row small');
       if(sm)sm.textContent=key==='masterclass'?"Tous les champs sont obligatoires, sauf mention contraire. Vous recevrez une confirmation par e-mail.":'Tous les champs sont obligatoires. Votre billet (QR code) s\'affiche tout de suite et vous est envoyé par e-mail.';
     }
+    form._t0=Date.now();
     form.addEventListener('submit',e=>{
       e.preventDefault();err.hidden=true;
       form.querySelectorAll('.ferr').forEach(x=>x.remove());
@@ -283,6 +285,7 @@
         err.textContent='Certains champs sont manquants ou incorrects : ils sont signalés en rouge.';err.hidden=false;return;
       }
       const d=Object.fromEntries(new FormData(form).entries());
+      d.humain='1';d.delai=String(Date.now()-(form._t0||Date.now()));
       const t=v=>String(v||'').trim();
       if(window.ASYM_API){reserver(key,d,{box,form,err,ok,wrap});return}
       const num=String(WHATSAPP[key]||'').replace(/\D/g,'');
