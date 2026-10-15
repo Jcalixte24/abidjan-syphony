@@ -14,17 +14,20 @@
 // ========================= À MODIFIER =========================
 const CONFIG = {
   EMAIL_EQUIPE: '',                       // reçoit une alerte à chaque réservation. Plusieurs adresses : 'a@x.com,b@y.com'
-  CLE_ACCUEIL: '',                        // mot de passe de la page de scan à l'entrée (inventez-en un, 12 caractères ou plus)
+  CLE_ACCUEIL: '',                        // clé de l'espace SCAN (équipe d'accueil) : peut seulement valider les billets (12 caractères ou plus)
+  CLE_ADMIN: '',                          // clé de l'espace ORGANISATEURS : liste des inscrits, places, accepter / refuser (différente de la précédente)
+  URL_ORGANISATEURS: '',                  // optionnel : adresse cachée de l'espace organisateurs, ex. 'https://admin.mondomaine.com/' (sinon : site + organisateurs/)
+  URL_SCAN: '',                           // optionnel : adresse cachée de l'espace scan, ex. 'https://scan.mondomaine.com/' (sinon : site + scan/)
   URL_SITE: 'https://jcalixte24.github.io/abidjan-syphony/',   // adresse du site (avec « / » à la fin)
   NOM_EXPEDITEUR: 'BOMLAAH',
   REPONDRE_A: '',                         // optionnel : adresse qui reçoit les réponses des inscrits
   DATE_EVENEMENT: '2026-11-13',           // AAAA-MM-JJ
   DATE_AFFICHEE: 'vendredi 13 novembre 2026',
   LIEU: 'YELAM’S, Treichville, Abidjan',
-  PLACES_CINECONCERT: 0,                  // capacité de la salle pour le ciné-concert (0 = non précisée : on compte seulement les places réservées)
+  PLACES_CINECONCERT: 400,                // capacité du ciné-concert : au-delà, le formulaire affiche « complet » (0 = pas de limite)
   PLACES_PAR_MASTERCLASS: 12,             // places par masterclass
   MASTERCLASS: [                          // titres exacts du formulaire du site (assets/data.js)
-    "Droits d'auteur et économie de la création",
+    "Droits d'auteur et économie des industries culturelles et créatives",
     "Le métier de compositeur de musique à l'image",
     "Opportunités de carrière",
     "Réalisateur et compositeur : le film d'animation",
@@ -81,6 +84,27 @@ function doPost(e) {
     const existante = t.valeurs.slice(1).find(l => String(l[t.col['E-mail']]).toLowerCase() === email &&
       f.colonnes.map(c => String(l[t.col[c[0]]]).toLowerCase()).join('|') === cleDoublon);
     if (existante) return json_({ ok: true, code: existante[t.col['Code']], doublon: true });
+    if (type === 'masterclass') {      // une réservation par personne et par masterclass : un doublon ne crée pas de ligne, la personne reçoit son code
+      const nomMc = texte_(p.thematique).toLowerCase();
+      const deja = t.valeurs.slice(1).find(l => String(l[t.col['E-mail']]).toLowerCase() === email && String(l[t.col['Masterclass']]).toLowerCase() === nomMc &&
+        ['Annulé', 'Refusé'].indexOf(String(l[t.col['Statut']])) === -1);
+      if (deja) {
+        const c0 = deja[t.col['Code']], intro = 'Vous avez déjà candidaté à cette masterclass : une seule réservation par personne. Votre candidature est enregistrée sous le code ' + c0 + '.';
+        envoyer_(texte_(p.email), 'Votre candidature · BOMLAAH', 'Bonjour ' + texte_(p.prenom) + ',\n\n' + intro + '\n\nBOMLAAH',
+          gabarit_('Déjà enregistré', '<p>' + h_(intro) + '</p><p>' + bouton_(lienBillet_(c0), 'Voir ma candidature') + '</p>'));
+        return json_({ ok: true, code: c0, doublon: true });
+      }
+    }
+
+    const rg = reglages_();
+    if ((type === 'cineconcert' && rg.cine.ferme) || (type === 'masterclass' && rg.master.ferme)) return json_({ ok: false, erreur: 'ferme' });
+    if (type === 'cineconcert') {
+      const cap = reglages_().cine.capacite;
+      if (cap) {
+        const pris = lignes_('cineconcert').filter(l => l['Statut'] !== 'Annulé').reduce((s, l) => s + (Number(l['Places']) || 1), 0);
+        if (pris + Number(p.places) > cap) return json_({ ok: false, erreur: 'complet', restantes: Math.max(cap - pris, 0) });
+      }
+    }
 
     // Le site fabrique le code (pour afficher le QR tout de suite) ; on le garde s'il est valide et libre.
     const codes = t.valeurs.slice(1).map(l => String(l[t.col['Code']]));
@@ -91,9 +115,14 @@ function doPost(e) {
     const ligne = [new Date(), code]
       .concat(f.colonnes.map(c => c[1] === 'places' ? Number(p.places) : texte_(p[c[1]])))
       .concat([STATUT_INITIAL[type]])
+      .concat(type === 'masterclass' ? [''] : [])
       .concat(CONFIG.JOURS_RAPPELS.map(() => ''))
       .concat(['']);
-    feuille.appendRow(ligne);
+    // On écrit la ligne en forçant le format texte AVANT les valeurs : « +225 07… » ne devient pas une formule (#ERROR!).
+    const eh = entetes_(type), numero = feuille.getLastRow() + 1;
+    const zone = feuille.getRange(numero, 1, 1, ligne.length);
+    zone.setNumberFormats([ligne.map((v, i) => i === 0 ? 'dd/mm/yyyy hh:mm' : eh[i] === 'Places' ? '0' : '@')]);
+    zone.setValues([ligne]);
 
     envoyerConfirmation_(type, p, code);
     notifierEquipe_(type, p, code, feuille);
@@ -115,7 +144,7 @@ function valider_(type, p) {
   if (texte_(p.telephone).replace(/\D/g, '').length < 8) return 'Téléphone invalide';
   if (type === 'cineconcert') {
     const n = Number(p.places);
-    if (!(n >= 1 && n <= 4) || n % 1 !== 0) return 'Nombre de places invalide';
+    if (!(n >= 1 && n <= 3) || n % 1 !== 0) return 'Nombre de places invalide';   // 3 places maximum par réservation
   } else if (/^étudiant/i.test(texte_(p.statut))) {
     if (!texte_(p.etablissement) || !texte_(p.niveau)) return 'Établissement et filière requis pour un étudiant';
   } else if (!texte_(p.profil)) {
@@ -165,7 +194,7 @@ function notifierEquipe_(type, p, code, feuille) {
   }
   const total = type === 'cineconcert'
     ? tot.inscriptions + ' réservation(s), ' + tot.places + ' place(s) au total'
-    : tot.inscriptions + ' candidature(s) au total';
+    : tot.inscriptions + ' personne(s) candidate(s) au total (une réservation par personne)';
   const lien = SpreadsheetApp.getActiveSpreadsheet().getUrl();
   const html = gabarit_('Nouvelle inscription', tableau_(lignes) +
     '<p><b>Total à jour :</b> ' + h_(total) + '</p>' + bouton_(lien, 'Ouvrir la liste (Google Sheet)'));
@@ -245,14 +274,27 @@ function doGet(e) {
   const p = (e && e.parameter) || {};
   const a = p.a || '';
   if (a === 'oui' || a === 'non') return presence_(p);               // liens des e-mails (page HTML)
-  if (a === 'billet') return reponse_(billet_(p.c), p.callback);      // page « billet » du site (JSONP)
-  if (a === 'checkin') return reponse_(checkin_(p.c, p.k), p.callback); // page « accueil » du site (JSONP)
+  if (a === 'billet') return reponse_(billet_(p.code), p.callback);      // page « billet » du site (JSONP)
+  if (a === 'checkin') return reponse_(checkin_(p.code, p.k), p.callback); // page « accueil » du site (JSONP)
   if (a === 'stats') return reponse_(stats_(p.k), p.callback);
+  if (a === 'dispo') return reponse_(dispo_(), p.callback);               // places restantes du ciné-concert (public, aucune donnée personnelle)
   if (a === 'liste') return reponse_(liste_(p.k), p.callback);          // application organisateurs : tous les inscrits
   if (a === 'places') return reponse_(places_(p.k), p.callback);        // places réservées / restantes
-  if (a === 'statut') return reponse_(changerStatut_(p.c, p.s, p.k), p.callback);
-  if (a === 'retirer') return reponse_(retirerPresence_(p.c, p.k), p.callback);
+  if (a === 'statut') return reponse_(changerStatut_(p.code, p.s, p.k, p.m, p.f), p.callback);
+  if (a === 'reglage') return reponse_(changerReglage_(p.cible, p.ferme, p.capacite, p.k), p.callback);
+  if (a === 'retirer') return reponse_(retirerPresence_(p.code, p.k), p.callback);
   return page_('BOMLAAH', '<p>Ce lien n\'est pas valide.</p>');
+}
+
+/** Places restantes du ciné-concert : le site s'en sert pour afficher « complet » ou limiter le nombre de places. */
+function dispo_() {
+  const rg = reglages_(), cap = rg.cine.capacite;
+  let restantes = null;
+  if (cap) {
+    const pris = lignes_('cineconcert').filter(l => l['Statut'] !== 'Annulé').reduce((s, l) => s + (Number(l['Places']) || 1), 0);
+    restantes = Math.max(cap - pris, 0);
+  }
+  return { ok: true, cine: { capacite: cap, restantes: restantes, ferme: rg.cine.ferme }, master: { ferme: rg.master.ferme } };
 }
 
 /** Infos affichées sur le billet : prénom, initiale du nom, places. Rien d'autre. */
@@ -270,7 +312,7 @@ function billet_(code) {
 
 /** Scan à l'entrée : marque la personne comme présente. Réservé à l'équipe (clé d'accueil). */
 function checkin_(code, cle) {
-  if (!CONFIG.CLE_ACCUEIL || String(cle || '') !== CONFIG.CLE_ACCUEIL) return { ok: false, etat: 'refuse' };
+  if (!cleScan_(cle)) return { ok: false, etat: 'refuse' };
   const c = String(code || '').trim().toUpperCase();
   if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(c)) return { ok: false, etat: 'inconnu' };
   const verrou = LockService.getScriptLock();
@@ -280,7 +322,8 @@ function checkin_(code, cle) {
     if (!f) return { ok: false, etat: 'inconnu' };
     const t = f.t, l = f.ligne, statut = String(l[t.col['Statut']]);
     const info = { prenom: String(l[t.col['Prénom']]), nom: String(l[t.col['Nom']]), places: f.type === 'cineconcert' ? Number(l[t.col['Places']]) || 1 : 0, type: f.type, code: c,
-      detail: f.type === 'cineconcert' ? String(l[t.col['Profil']] || '') : String(l[t.col['Masterclass']] || '') };
+      detail: f.type === 'cineconcert' ? '' : String(l[t.col['Masterclass']] || ''),
+      profil: f.type === 'cineconcert' ? String(l[t.col['Profil']] || '') : (/^étudiant/i.test(String(l[t.col['Vous êtes']] || '')) ? 'Étudiant(e)' : String(l[t.col['Profil']] || l[t.col['Vous êtes']] || '')) };
     if (statut === 'Annulé') return Object.assign({ ok: false, etat: 'annule' }, info);
     if (statut === 'Candidature' || statut === 'Refusé') return Object.assign({ ok: false, etat: 'non_retenu' }, info);
     const deja = String(l[t.col['Présent']] || '');
@@ -294,7 +337,7 @@ function checkin_(code, cle) {
 
 /** Compteurs pour la page d'accueil : présents / réservations. */
 function stats_(cle) {
-  if (!CONFIG.CLE_ACCUEIL || String(cle || '') !== CONFIG.CLE_ACCUEIL) return { ok: false, etat: 'refuse' };
+  if (!cleScan_(cle)) return { ok: false, etat: 'refuse' };
   const feuille = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(FORMULAIRES.cineconcert.onglet);
   let reservations = 0, placesTotal = 0, presents = 0, placesPresentes = 0;
   if (feuille && feuille.getLastRow() >= 2) {
@@ -306,14 +349,16 @@ function stats_(cle) {
       if (String(l[t.col['Présent']] || '')) { presents++; placesPresentes += n; }
     });
   }
-  return { reservations: reservations, placesTotal: placesTotal, presents: presents, placesPresentes: placesPresentes };
+  const m = lignes_('masterclass').filter(l => ['Retenu', 'Confirmé'].indexOf(l['Statut']) !== -1);
+  return { reservations: reservations, placesTotal: placesTotal, presents: presents, placesPresentes: placesPresentes,
+    masterRetenus: m.length, masterPresents: m.filter(l => String(l['Présent'] || '')).length };
 }
 
 /** Lien « Je viens / Je ne viens pas » d'un e-mail de rappel. */
 function presence_(p) {
   const rep = p.a === 'non' ? 'non' : 'oui';
-  if (!p.c) return page_('Lien incomplet', '<p>Ce lien est incomplet. Répondez directement à notre e-mail.</p>');
-  const trouve = trouverParCode_(String(p.c).trim().toUpperCase());
+  if (!p.code) return page_('Lien incomplet', '<p>Ce lien est incomplet. Répondez directement à notre e-mail.</p>');
+  const trouve = trouverParCode_(String(p.code).trim().toUpperCase());
   if (!trouve) return page_('Code introuvable', '<p>Nous ne retrouvons pas cette réservation. Répondez directement à notre e-mail.</p>');
   const statut = trouve.ligne[trouve.t.col['Statut']];
   if (['Inscrit', 'Confirmé', 'Retenu', 'Annulé'].indexOf(statut) === -1) {
@@ -350,7 +395,36 @@ function trouverParCode_(code) {
 
 const STATUTS_POSSIBLES = { cineconcert: ['Inscrit', 'Confirmé', 'Annulé'], masterclass: ['Candidature', 'Retenu', 'Refusé', 'Annulé'] };
 
-function cleOk_(cle) { return !!CONFIG.CLE_ACCUEIL && String(cle || '') === CONFIG.CLE_ACCUEIL; }
+/** Espace organisateurs : clé d'administration uniquement. */
+/** Réglages modifiables depuis l'espace organisateurs : réservations fermées / ouvertes, nombre de places du ciné-concert. */
+function reglages_() {
+  const p = PropertiesService.getScriptProperties();
+  const cap = p.getProperty('CAPACITE_CINE');
+  return {
+    cine: { ferme: p.getProperty('FERME_CINE') === '1', capacite: cap !== null && cap !== '' ? (Number(cap) || 0) : (Number(CONFIG.PLACES_CINECONCERT) || 0) },
+    master: { ferme: p.getProperty('FERME_MASTER') === '1' }
+  };
+}
+
+function changerReglage_(cible, ferme, capacite, cle) {
+  if (!cleOk_(cle)) return { ok: false, etat: 'refuse' };
+  const p = PropertiesService.getScriptProperties();
+  if (cible !== 'cine' && cible !== 'master') return { ok: false, etat: 'cible_invalide' };
+  if (ferme !== undefined && ferme !== '') p.setProperty(cible === 'cine' ? 'FERME_CINE' : 'FERME_MASTER', String(ferme) === '1' ? '1' : '0');
+  if (cible === 'cine' && capacite !== undefined && capacite !== '') {
+    const n = Number(capacite);
+    if (!(n >= 0 && n <= 100000) || n % 1 !== 0) return { ok: false, etat: 'capacite_invalide' };
+    p.setProperty('CAPACITE_CINE', String(n));
+  }
+  return { ok: true, reglages: reglages_() };
+}
+
+function cleOk_(cle) { return !!CONFIG.CLE_ADMIN && String(cle || '') === CONFIG.CLE_ADMIN; }
+/** Espace scan : la clé d'accueil, ou la clé d'administration. */
+function cleScan_(cle) {
+  const k = String(cle || '');
+  return !!k && ((!!CONFIG.CLE_ACCUEIL && k === CONFIG.CLE_ACCUEIL) || (!!CONFIG.CLE_ADMIN && k === CONFIG.CLE_ADMIN));
+}
 
 /** Toutes les lignes d'un onglet, sous forme d'objets { 'Prénom': 'Awa', … }. */
 function lignes_(type) {
@@ -381,7 +455,7 @@ function places_(cle) {
   const actifs = cine.filter(l => l['Statut'] !== 'Annulé');
   const n = l => Number(l['Places']) || 1;
   const placesCine = actifs.reduce((s, l) => s + n(l), 0);
-  const cap = Number(CONFIG.PLACES_CINECONCERT) || 0;
+  const cap = reglages_().cine.capacite;
   const presentsCine = actifs.filter(l => String(l['Présent'] || ''));
   const c = {
     reservations: actifs.length, places: placesCine, annulees: cine.length - actifs.length,
@@ -401,11 +475,15 @@ function places_(cle) {
     candidatures: par.reduce((s, x) => s + x.candidatures, 0), retenus: par.reduce((s, x) => s + x.retenus, 0),
     presents: par.reduce((s, x) => s + x.presents, 0), capacite: cp * noms.length, par: par
   };
-  return { ok: true, cine: c, master: m };
+  return { ok: true, cine: c, master: m, reglages: reglages_() };
 }
 
-/** Change le statut d'une ligne (ex. « Retenu » pour une masterclass). Un candidat retenu reçoit son billet par e-mail. */
-function changerStatut_(code, statut, cle) {
+/**
+ * Change le statut d'une ligne.
+ * Masterclass : « Retenu » envoie son billet QR par e-mail (avec un message facultatif de l'équipe) ;
+ * « Refusé » exige un motif, enregistré dans le Sheet et envoyé par e-mail. Une masterclass pleine demande une confirmation (force = 1).
+ */
+function changerStatut_(code, statut, cle, motif, force) {
   if (!cleOk_(cle)) return { ok: false, etat: 'refuse' };
   const c = String(code || '').trim().toUpperCase();
   if (!/^(CC|MC)-[A-Z0-9]{6}$/.test(c)) return { ok: false, etat: 'inconnu' };
@@ -416,21 +494,43 @@ function changerStatut_(code, statut, cle) {
     if (!f) return { ok: false, etat: 'inconnu' };
     if (STATUTS_POSSIBLES[f.type].indexOf(String(statut)) === -1) return { ok: false, etat: 'statut_invalide' };
     const ancien = String(f.ligne[f.t.col['Statut']]);
+    const note = texte_(motif);
+    if (f.type === 'masterclass') {
+      if (statut === 'Refusé' && !note) return { ok: false, etat: 'motif_requis' };
+      if (statut === 'Retenu' && ancien !== 'Retenu' && String(force) !== '1') {
+        const nom = String(f.ligne[f.t.col['Masterclass']]);
+        const retenus = lignes_('masterclass').filter(x => String(x['Masterclass']) === nom && ['Retenu', 'Confirmé'].indexOf(x['Statut']) !== -1).length;
+        const cap = Number(CONFIG.PLACES_PAR_MASTERCLASS) || 12;
+        if (retenus >= cap) return { ok: false, etat: 'complet', retenus: retenus, capacite: cap };
+      }
+      if (f.t.col['Motif'] !== undefined && (statut === 'Refusé' || statut === 'Retenu')) f.feuille.getRange(f.numero, f.t.col['Motif'] + 1).setValue(note);
+    }
     f.feuille.getRange(f.numero, f.t.col['Statut'] + 1).setValue(statut);
-    if (f.type === 'masterclass' && statut === 'Retenu' && ancien !== 'Retenu') envoyerRetenu_(f);
+    if (f.type === 'masterclass' && statut === 'Retenu' && ancien !== 'Retenu') envoyerRetenu_(f, note);
+    if (f.type === 'masterclass' && statut === 'Refusé' && ancien !== 'Refusé') envoyerRefus_(f, note);
     return { ok: true, code: c, statut: String(statut), ancien: ancien };
   } finally {
     verrou.releaseLock();
   }
 }
 
-function envoyerRetenu_(f) {
+function envoyerRetenu_(f, message) {
   const l = f.ligne, t = f.t, prenom = l[t.col['Prénom']], code = l[t.col['Code']];
   const lignes = [['Code', '<b>' + h_(code) + '</b>'], ['Masterclass', h_(String(l[t.col['Masterclass']]))], ['Date', h_(CONFIG.DATE_AFFICHEE)], ['Lieu', h_(CONFIG.LIEU)]];
   const intro = "Bonne nouvelle : votre candidature est retenue. Votre billet est un QR code à présenter à l'entrée de la masterclass.";
-  const html = gabarit_('Vous êtes retenu(e), ' + prenom, '<p>' + h_(intro) + '</p>' + tableau_(lignes) + '<p>' + bouton_(lienBillet_(code), 'Voir mon billet (QR code)') + '</p>');
-  const texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nMon billet : ' + lienBillet_(code) + '\nCode : ' + code + '\n\nÀ bientôt,\nBOMLAAH';
+  const mot = message ? '<p><b>Message de l\'équipe :</b> ' + h_(message) + '</p>' : '';
+  const html = gabarit_('Vous êtes retenu(e), ' + prenom, '<p>' + h_(intro) + '</p>' + mot + tableau_(lignes) + '<p>' + bouton_(lienBillet_(code), 'Voir mon billet (QR code)') + '</p>');
+  const texte = 'Bonjour ' + prenom + ',\n\n' + intro + (message ? '\n\nMessage de l\'équipe : ' + message : '') + '\n\nMon billet : ' + lienBillet_(code) + '\nCode : ' + code + '\n\nÀ bientôt,\nBOMLAAH';
   envoyer_(texte_(l[t.col['E-mail']]), 'Votre place à la masterclass · BOMLAAH', texte, html);
+}
+
+function envoyerRefus_(f, motif) {
+  const l = f.ligne, t = f.t, prenom = l[t.col['Prénom']];
+  const intro = "Merci d'avoir candidaté à une masterclass BOMLAAH. Nous ne pouvons malheureusement pas vous accorder de place cette fois-ci.";
+  const html = gabarit_('Votre candidature, ' + prenom, '<p>' + h_(intro) + '</p><p><b>Motif :</b> ' + h_(motif) + '</p>' +
+    '<p>Le ciné-concert du soir reste ouvert à tous sur réservation : ' + bouton_(CONFIG.URL_SITE + 'cineconcert/', 'Voir le ciné-concert', true) + '</p>');
+  const texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nMotif : ' + motif + '\n\nLe ciné-concert du soir reste ouvert à tous sur réservation : ' + CONFIG.URL_SITE + 'cineconcert/\n\nCordialement,\nBOMLAAH';
+  envoyer_(texte_(l[t.col['E-mail']]), 'Votre candidature à la masterclass · BOMLAAH', texte, html);
 }
 
 /** Annule un scan fait par erreur. */
@@ -476,7 +576,12 @@ function emailDeTest() {
 
 function lienAccueil() {
   if (!CONFIG.CLE_ACCUEIL) { alerte_('Renseignez d\'abord CLE_ACCUEIL dans le script.'); return; }
-  alerte_('Application organisateurs (scan, inscrits, places) à ouvrir sur le téléphone de l\'équipe (ne la partagez qu\'au personnel) :\n\n' + CONFIG.URL_SITE + 'organisateurs/#k=' + CONFIG.CLE_ACCUEIL);
+  alerte_('Espace SCAN (équipe d\'accueil : valider les billets uniquement). Ne le partagez qu\'au personnel :\n\n' + (CONFIG.URL_SCAN || CONFIG.URL_SITE + 'scan/') + '#k=' + CONFIG.CLE_ACCUEIL);
+}
+
+function lienOrganisateurs() {
+  if (!CONFIG.CLE_ADMIN) { alerte_('Renseignez d\'abord CLE_ADMIN dans le script.'); return; }
+  alerte_('Espace ORGANISATEURS (liste des inscrits, places, accepter / refuser). Réservé à l\'administration :\n\n' + (CONFIG.URL_ORGANISATEURS || CONFIG.URL_SITE + 'organisateurs/') + '#k=' + CONFIG.CLE_ADMIN);
 }
 
 function onOpen() {
@@ -485,7 +590,8 @@ function onOpen() {
     .addItem('2. Envoyer un e-mail de test', 'emailDeTest')
     .addItem('3. Activer les rappels automatiques', 'installerDeclencheurs')
     .addSeparator()
-    .addItem('Lien de l\'application organisateurs', 'lienAccueil')
+    .addItem('Lien de l\'espace organisateurs', 'lienOrganisateurs')
+    .addItem('Lien de l\'espace scan (accueil)', 'lienAccueil')
     .addItem('Envoyer les rappels maintenant', 'rappelsMaintenant')
     .addToUi();
 }
@@ -528,6 +634,7 @@ function entetes_(type) {
   return ['Date', 'Code']
     .concat(FORMULAIRES[type].colonnes.map(c => c[0]))
     .concat(['Statut'])
+    .concat(type === 'masterclass' ? ['Motif'] : [])
     .concat(CONFIG.JOURS_RAPPELS.map(n => 'Rappel J-' + n))
     .concat(['Présent']);
 }
@@ -565,7 +672,7 @@ function tableauDeBord_() {
   d.getRange(1, 1, lignes.length, 2).clearContent();
   lignes.forEach((l, i) => {
     d.getRange(i + 1, 1).setValue(l[0]);
-    if (l[1]) d.getRange(i + 1, 2).setFormula(l[1]);
+    if (l[1]) poserFormule_(d.getRange(i + 1, 2), l[1]);
   });
   try {
     d.getRange(1, 1).setFontWeight('bold').setFontSize(14);
@@ -573,6 +680,16 @@ function tableauDeBord_() {
     d.getRange(4, 2, lignes.length, 1).setFontWeight('bold').setHorizontalAlignment('right');
     d.setColumnWidth(1, 330); d.setColumnWidth(2, 110);
   } catch (err) { console.warn(err); }
+}
+
+/** Pose une formule ; si le Sheet est en français (séparateur « ; »), on réessaie avec des points-virgules. */
+function poserFormule_(cellule, formule) {
+  cellule.setFormula(formule);
+  try {
+    SpreadsheetApp.flush();
+    const v = String(cellule.getDisplayValue());
+    if (v.indexOf('#ERROR') === 0 || v.indexOf('#NAME') === 0 || v.indexOf('Err') === 0) cellule.setFormula(formule.replace(/,/g, ';'));
+  } catch (e) { /* hors Sheet (tests) : rien à faire */ }
 }
 
 function table_(feuille) {
@@ -602,7 +719,7 @@ function genererCode_(prefixe, existants) {
 
 function lienAction_(code, reponse) {
   const url = ScriptApp.getService().getUrl();
-  return url ? url + '?a=' + reponse + '&c=' + encodeURIComponent(code) : '';
+  return url ? url + '?a=' + reponse + '&code=' + encodeURIComponent(code) : '';
 }
 
 function envoyer_(a, sujet, texte, html) {

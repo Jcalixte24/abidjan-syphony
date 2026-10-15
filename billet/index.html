@@ -81,10 +81,11 @@ a{color:inherit}
   var api = window.ASYM_API || '';
   var secours = function () { dire('Impossible de vérifier votre réservation pour le moment (connexion). Votre QR code reste valable : présentez-le à l\'entrée.', 'orange'); montrer([], ''); };
   if (!api) { secours(); return; }
-  ASYM.jsonp(api + '?a=billet&c=' + encodeURIComponent(code), function (r) {
+  ASYM.jsonp(api + '?a=billet&code=' + encodeURIComponent(code), function (r) {
     if (!r || !r.ok) { dire('Billet introuvable. Vérifiez le lien reçu par e-mail.', 'rouge'); return; }
     if (r.statut === 'Annulé') { dire('Cette réservation a été annulée.', 'rouge'); return; }
-    if (r.statut === 'Candidature' || r.statut === 'Refusé') { dire('Votre candidature aux masterclass est en cours d\'étude. Vous recevrez une réponse par e-mail.', 'orange'); return; }
+    if (r.statut === 'Refusé') { dire('Votre candidature n\'a pas été retenue pour cette masterclass. Le motif vous a été envoyé par e-mail.', 'rouge'); return; }
+    if (r.statut === 'Candidature') { dire('Votre candidature aux masterclass est en cours d\'étude. Vous recevrez une réponse par e-mail, avec votre billet QR si elle est retenue.', 'orange'); return; }
     var lignes = [r.date + (r.horaires ? ' · ' + r.horaires : ''), r.lieu];
     if (r.places) lignes.unshift(r.places + ' place' + (r.places > 1 ? 's' : ''));
     montrer(lignes.length > 2 ? [lignes[0] + ' · ' + lignes[1], lignes[2]] : lignes, r.prenom + ' ' + r.nom);

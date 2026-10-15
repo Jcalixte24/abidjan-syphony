@@ -240,7 +240,7 @@
     ok.querySelector('h3').textContent=cine?'Réservation enregistrée':'Candidature envoyée';
     ok.querySelector('.ok-msg').textContent=cine
       ?`Merci ${t(d.prenom)}. Voici votre billet : présentez ce QR code à l'entrée. Un e-mail de confirmation est envoyé à ${t(d.email)} (pensez à vérifier vos courriers indésirables).`
-      :`Merci ${t(d.prenom)}. Votre candidature est bien reçue (code ${code}). Un e-mail de confirmation est envoyé à ${t(d.email)} ; vous recevrez ensuite une réponse.`;
+      :`Merci ${t(d.prenom)}. Votre candidature est bien reçue. Une seule réservation par personne et par masterclass. Un e-mail de confirmation, avec votre code, est envoyé à ${t(d.email)} ; vous recevrez ensuite une réponse.`;
     if(wa)wa.hidden=true;
     if(qr)qr.hidden=!cine;
     if(save)save.hidden=!cine;
@@ -271,7 +271,7 @@
           const host=f.type==='radio'?f.closest('fieldset'):(f.closest('.f')||f.closest('.check'));
           const id='e-'+form.id+'-'+(f.name||Math.random().toString(36).slice(2));
           const m=document.createElement('small');m.className='ferr';m.id=id;
-          m.textContent=f.type==='email'&&f.value?'Adresse e-mail incomplète, ex. vous@exemple.com':f.type==='checkbox'?'Cochez cette case pour continuer.':f.type==='radio'?'Choisissez une masterclass.':'Ce champ est obligatoire.';
+          m.textContent=f.validity&&f.validity.patternMismatch?'Numéro incorrect, ex. +225 07 00 00 00 00':f.type==='email'&&f.value?'Adresse e-mail incomplète, ex. vous@exemple.com':f.type==='checkbox'?'Cochez cette case pour continuer.':f.type==='radio'?'Choisissez une masterclass.':'Ce champ est obligatoire.';
           host.appendChild(m);f.setAttribute('aria-invalid','true');f.setAttribute('aria-describedby',id);
         });
         const first=form.querySelector('input:invalid,select:invalid,textarea:invalid');if(first)first.focus();
@@ -310,4 +310,22 @@
   let tick=false;
   function maj(){tick=false;const r=h.getBoundingClientRect(),p=Math.max(0,Math.min(1,-r.top/Math.max(r.height*.8,1)));h.style.setProperty('--p',p.toFixed(3))}
   addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(maj)}},{passive:true});maj();
+})();
+
+/* ================== PLACES RESTANTES ET FERMETURE ================== */
+(function(){
+  if(!window.ASYM_API||!window.ASYM)return;
+  const sel=document.getElementById('c-places'),boxC=document.getElementById('box-cineconcert'),boxM=document.getElementById('box-masterclass');
+  function ferme(box,texte){if(!box)return;const b=box.querySelector('button[type=submit]'),note=box.querySelector('.note');if(b)b.disabled=true;if(note)note.textContent=texte}
+  ASYM.jsonp(window.ASYM_API+'?a=dispo',r=>{
+    if(!r||!r.ok)return;
+    if(r.master&&r.master.ferme)ferme(boxM,'Les candidatures aux masterclass sont closes.');
+    if(!r.cine)return;
+    if(r.cine.ferme){ferme(boxC,'Les réservations du ciné-concert sont closes.');return}
+    if(r.cine.restantes==null)return;
+    const n=r.cine.restantes,note=boxC&&boxC.querySelector('.note');
+    if(n<=0){ferme(boxC,'Le ciné-concert est complet : toutes les places sont réservées.');return}
+    if(sel)[...sel.options].forEach(o=>{if(+o.value>n)o.remove()});
+    if(n<=40&&note)note.textContent+=' Il reste '+n+' place'+(n>1?'s':'')+'.';
+  });
 })();

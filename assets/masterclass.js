@@ -61,11 +61,14 @@ const initiales = n => n.split(/\s+/).map(x => x[0]).join('').slice(0, 2).toUppe
 /* ================== INTERVENANTS ================== */
 (function(){
   const box=document.getElementById('team');
+  const esc=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   box.innerHTML=INTERVENANTS.map(p=>{
     const mc=THEMES.filter(t=>t.intervenants.includes(p.id)).map(t=>t.tag).join(' · ');
-    const pic=p.photo?`<img class="av-img" src="${p.photo}" alt="${p.name}" loading="lazy">`:`<span class="av av-l" aria-hidden="true">${initiales(p.name)}</span>`;
-    return `<article class="pers rv">${pic}<div><h3>${p.name}</h3><p class="role">${p.role}</p><p class="mc-l">${mc}</p>${p.bio?`<p class="bio">${p.bio}</p>`:''}</div></article>`;
+    const src=p.photo?(p.photo.startsWith('data:')?p.photo:'../'+p.photo):'';
+    const pic=src?`<img class="pers-photo" src="${src}" alt="${esc(p.name)}" width="640" height="800" loading="lazy">`:`<span class="pers-photo pers-init" aria-hidden="true">${initiales(p.name)}</span>`;
+    const bio=(p.bio&&p.bio.length)?`<details class="bio"><summary>Biographie</summary>${p.bio.map(x=>`<p>${esc(x)}</p>`).join('')}</details>`:'';
+    return `<article class="pers rv">${pic}<div class="pers-txt"><h3>${esc(p.name)}</h3><p class="role">${esc(p.role)}</p><p class="mc-l">${esc(mc)}</p>${bio}</div></article>`;
   }).join('');
-  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.12});
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.08});
   box.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%3)*.08+'s';io.observe(el)});
 })();

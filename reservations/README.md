@@ -32,14 +32,22 @@ Recharger le Sheet : un menu **BOMLAAH** apparaît. Lancer dans l'ordre :
 
 Après toute modification de `Code.gs` : **Déployer → Gérer les déploiements → ✏️ → Nouvelle version**. L'URL ne change pas.
 
-## 4. Application organisateurs
-Menu **BOMLAAH → Lien de l'application organisateurs** : copier l'adresse (elle contient la clé après `#`, qui disparaît de la barre d'adresse une fois la page ouverte) et l'envoyer à l'équipe d'accueil. Sans le lien, la page demande la clé d'accueil. Trois onglets :
-- **Scanner** : la caméra lit le QR du billet. Écran **vert** = entrée validée (nom, type, places, masterclass), **orange** = déjà scanné (l'heure s'affiche), **rouge** = annulé, non retenu ou inconnu. Le code peut aussi être saisi à la main. La page doit être en https (c'est le cas sur GitHub Pages).
-- **Inscrits** : ciné-concert ou masterclass, avec recherche (nom, e-mail, téléphone, code) et filtres (présents, annulés, candidatures, retenus…). Un appui sur une personne affiche toutes ses données et permet de valider ou annuler son entrée, de changer son statut (passer une candidature en « Retenu » envoie son billet par e-mail), de l'appeler ou de lui écrire. Un bouton exporte la liste en CSV.
-- **Places** : places réservées du ciné-concert (et restantes si la capacité de la salle est renseignée dans `PLACES_CINECONCERT`) ; pour chaque masterclass, candidatures, retenus sur 12 places, places libres et entrés. La page se rafraîchit toute seule.
+## 4. Deux espaces cachés : organisateurs et scan
+Menu **BOMLAAH** du Sheet : « Lien de l'espace organisateurs » et « Lien de l'espace scan ». Chaque lien contient une clé après `#` (qui disparaît de la barre d'adresse une fois la page ouverte). Sans le lien, la page demande la clé. Les deux espaces ne sont liés depuis aucune page du site et ne sont pas indexés ; avec un nom de domaine, ils s'ouvrent sur des sous-domaines cachés (voir `DOMAINE.md`).
 
-## Masterclass
-Les candidatures arrivent avec le statut **Candidature**. Pour accepter, passer le statut à **Retenu** (dans l'application organisateurs, onglet Inscrits) : la personne reçoit son billet QR par e-mail. Chaque masterclass compte 12 places ; les colonnes du Sheet indiquent si le candidat est étudiant ou professionnel, son profil et sa structure.
+**Espace scan** (`scan/`, clé `CLE_ACCUEIL`, pour l'équipe d'accueil) : la caméra lit le QR du billet. Écran **vert** = entrée validée (nom, type, places, masterclass), **orange** = déjà scanné (l'heure s'affiche), **rouge** = annulé, non retenu ou inconnu. Le code peut aussi être saisi à la main. La page doit être en https (c'est le cas sur GitHub Pages et Vercel). Cette clé ne donne accès à aucune donnée personnelle.
+
+**Espace organisateurs** (`organisateurs/`, clé `CLE_ADMIN`) : trois onglets.
+- **Scanner** : comme l'espace scan.
+- **Inscrits** : ciné-concert ou masterclass, avec recherche (nom, e-mail, téléphone, code) et filtres. Un appui sur une personne affiche toutes ses données et permet de valider ou annuler son entrée, de l'appeler ou de lui écrire. Un bouton exporte la liste en CSV.
+- **Places** : places réservées du ciné-concert (et restantes si `PLACES_CINECONCERT` est renseigné) ; pour chaque masterclass, candidatures, retenus sur 12 places, places libres et entrés. La page se rafraîchit toute seule.
+
+## Masterclass : candidature, décision, billet
+1. La personne **postule** depuis le site (étudiante ou professionnelle) : statut **Candidature**, elle reçoit un e-mail d'accusé de réception avec son code.
+2. Dans l'espace organisateurs, onglet **Inscrits → Masterclass**, l'administrateur ouvre la candidature et choisit :
+   - **Accepter** : statut **Retenu**. Le candidat reçoit par e-mail son **billet QR** (même principe que le ciné-concert), avec un message facultatif de l'équipe. Si la masterclass est déjà pleine (12 retenus), une confirmation est demandée.
+   - **Refuser** : le **motif est obligatoire**. Il est enregistré dans la colonne *Motif* du Sheet et envoyé par e-mail au candidat.
+3. Le jour J, seuls les candidats **Retenus** passent au scan. Les autres s'affichent en rouge « non retenu ».
 
 ## Bon à savoir
 - **Limite d'envoi** : un compte Gmail gratuit envoie environ 100 e-mails par jour (1 500 avec Google Workspace). Pour ~700 inscrits, les rappels doivent être étalés sur plusieurs jours, ou envoyés depuis un compte Workspace.

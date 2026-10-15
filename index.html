@@ -261,7 +261,7 @@
     <div>
       <div class="cue rv">Le lieu et la coproduction</div>
       <div class="big rv d1">YELAM’S<span>Treichville, Abidjan</span></div>
-      <p class="txt rv d2"><b>Un seul lieu pour deux expériences immersives</b>YELAM’S Créative coproduit BOMLAAH et accueille, le vendredi 13 novembre 2026, la masterclass le jour et le ciné-concert le soir.</p>
+      <p class="txt rv d2"><b>Un seul lieu pour deux expériences immersives</b>YELAM’S Créative est un écosystème culturel, artistique et audiovisuel dédié à la création, à la production, à la diffusion et à la valorisation des expressions artistiques. À travers ses activités de programmation, de formation, de professionnalisation et d’accompagnement des talents, YELAM’S contribue au développement des industries culturelles et créatives en Côte d’Ivoire, tout en favorisant l’émergence de nouveaux talents, l’accès à la culture et les collaborations entre acteurs du secteur.</p>
       <img class="yel-logo rv d3" src="logos/yelams-couleur.png" alt="YELAM’S Créative" width="188" height="76" loading="lazy">
     </div>
     <div class="ticket-wrap rv d2">
@@ -320,7 +320,7 @@
           <div class="f"><label for="m-prenom">Prénom</label><input id="m-prenom" name="prenom" required autocomplete="given-name"></div>
           <div class="f"><label for="m-nom">Nom</label><input id="m-nom" name="nom" required autocomplete="family-name"></div>
           <div class="f"><label for="m-email">E-mail</label><input id="m-email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></div>
-          <div class="f"><label for="m-tel">Téléphone</label><input id="m-tel" name="telephone" type="tel" required autocomplete="tel" placeholder="+225 …"></div>
+          <div class="f"><label for="m-tel">Téléphone</label><input id="m-tel" name="telephone" type="tel" required pattern="[+0-9 ().\-]{8,20}" autocomplete="tel" placeholder="+225 …"></div>
           <div class="f full"><label for="m-statut">Vous êtes</label>
             <select id="m-statut" name="statut" required><option value="" selected disabled>Choisir</option><option>Étudiant(e)</option><option>Professionnel(le) ou autre profil</option></select></div>
           <div class="grp" id="m-grp-etu" hidden>
@@ -359,9 +359,9 @@
           <div class="f"><label for="c-prenom">Prénom</label><input id="c-prenom" name="prenom" required autocomplete="given-name"></div>
           <div class="f"><label for="c-nom">Nom</label><input id="c-nom" name="nom" required autocomplete="family-name"></div>
           <div class="f"><label for="c-email">E-mail</label><input id="c-email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></div>
-          <div class="f"><label for="c-tel">Téléphone</label><input id="c-tel" name="telephone" type="tel" required autocomplete="tel" placeholder="+225 …"></div>
+          <div class="f"><label for="c-tel">Téléphone</label><input id="c-tel" name="telephone" type="tel" required pattern="[+0-9 ().\-]{8,20}" autocomplete="tel" placeholder="+225 …"></div>
           <div class="f"><label for="c-places">Nombre de places</label>
-            <select id="c-places" name="places" required><option value="1">1 place</option><option value="2">2 places</option><option value="3">3 places</option><option value="4">4 places</option></select></div>
+            <select id="c-places" name="places" required><option value="1">1 place</option><option value="2">2 places</option><option value="3">3 places</option></select></div>
           <div class="f"><label for="c-profil">Vous êtes</label>
             <select id="c-profil" name="profil" required>
               <option value="" selected disabled>Choisir un profil</option>

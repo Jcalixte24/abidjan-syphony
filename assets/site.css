@@ -994,3 +994,19 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
   .ecran,.orch-h{opacity:1;transform:none}
   .hero-scene h1 .ln>span,.sig,.coprod{opacity:1;filter:none}
 }
+
+/* fiches intervenants : portrait + biographie dépliable */
+.team{grid-template-columns:repeat(3,1fr);align-items:start}
+.pers{flex-direction:column;gap:0;padding:0;overflow:hidden;align-items:stretch}
+.pers-photo{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;object-position:50% 20%;border-radius:0;background:var(--clair-2)}
+.pers-init{display:grid;place-items:center;background:linear-gradient(150deg,var(--elec),var(--brun));color:#fff;font-family:var(--disp);font-weight:800;font-size:3.4rem;letter-spacing:-.02em}
+.pers-txt{padding:1.2rem 1.4rem 1.4rem}
+.pers h3{font-size:1.3rem}
+.bio{margin-top:1rem;border-top:1px solid var(--trait);padding-top:.9rem}
+.bio summary{cursor:pointer;font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brun-2);list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:36px}
+.bio summary::-webkit-details-marker{display:none}
+.bio summary::after{content:"+";font-size:1.2rem;transition:transform .3s}
+.bio[open] summary::after{transform:rotate(45deg)}
+.bio p{margin-top:.8rem;font-size:.93rem;line-height:1.7;color:var(--txt-2)}
+@media (max-width:1020px){.team{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:620px){.team{grid-template-columns:1fr}.pers-photo{aspect-ratio:1/1}}
