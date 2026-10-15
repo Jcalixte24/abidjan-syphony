@@ -1025,3 +1025,11 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 
 #curtain .cur-logos{opacity:0;animation:fadeUp .8s .15s forwards}
 #curtain .cur-logos .x{font-size:1.6rem;letter-spacing:0;text-transform:none;color:var(--lav);opacity:1;animation:none}
+
+/* cartes « Deux univers » plus compactes ; photo d'Illman cadrée sur le visage */
+.pan{min-height:300px}
+.pan p{margin-top:.6rem;font-size:.97rem}
+.pan h3{font-size:clamp(1.8rem,3vw,2.5rem)}
+.pan-n{font-weight:600}
+.pers-photo[src$="illman-toure.jpg"]{object-position:22% 20%}
+@media (max-width:620px){.pan{min-height:260px}}
