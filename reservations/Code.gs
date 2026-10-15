@@ -16,9 +16,9 @@ const CONFIG = {
   EMAIL_EQUIPE: '',                       // reçoit une alerte à chaque réservation. Plusieurs adresses : 'a@x.com,b@y.com'
   CLE_ACCUEIL: '',                        // clé de l'espace SCAN (équipe d'accueil) : peut seulement valider les billets (12 caractères ou plus)
   CLE_ADMIN: '',                          // clé de l'espace ORGANISATEURS : liste des inscrits, places, accepter / refuser (différente de la précédente)
-  URL_ORGANISATEURS: '',                  // optionnel : adresse cachée de l'espace organisateurs, ex. 'https://admin.mondomaine.com/' (sinon : site + organisateurs/)
-  URL_SCAN: '',                           // optionnel : adresse cachée de l'espace scan, ex. 'https://scan.mondomaine.com/' (sinon : site + scan/)
-  URL_SITE: 'https://jcalixte24.github.io/abidjan-syphony/',   // adresse du site (avec « / » à la fin)
+  URL_ORGANISATEURS: 'https://admin.bomlaah.com/',                  // optionnel : adresse cachée de l'espace organisateurs, ex. 'https://admin.mondomaine.com/' (sinon : site + organisateurs/)
+  URL_SCAN: 'https://scan.bomlaah.com/',                           // optionnel : adresse cachée de l'espace scan, ex. 'https://scan.mondomaine.com/' (sinon : site + scan/)
+  URL_SITE: 'https://bomlaah.com/',   // adresse du site (avec « / » à la fin)
   NOM_EXPEDITEUR: 'BOMLAAH',
   REPONDRE_A: '',                         // optionnel : adresse qui reçoit les réponses des inscrits
   DATE_EVENEMENT: '2026-11-13',           // AAAA-MM-JJ

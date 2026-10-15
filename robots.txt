@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://jcalixte24.github.io/abidjan-syphony/sitemap.xml
+Sitemap: https://bomlaah.com/sitemap.xml

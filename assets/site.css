@@ -1038,3 +1038,7 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 .ins-liens a{display:inline-flex;align-items:center;gap:.6rem;font-weight:600;font-size:.95rem;color:var(--violet,#5B2BB0);text-decoration:none;padding:.5rem 0;border-bottom:1.5px solid currentColor}
 .ins-liens a i{display:inline-block;width:22px;height:1.5px;background:currentColor;transition:width .3s}
 .ins-liens a:hover i{width:38px}
+
+.films{align-items:start}
+.cover.affiche{aspect-ratio:4/5}
+.film:nth-child(1) .cover.affiche img{object-position:50% 50%}
