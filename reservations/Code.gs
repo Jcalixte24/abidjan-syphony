@@ -334,8 +334,8 @@ function envoyerRappel_(type, t, l, jours) {
   const quand = jours === 0 ? 'C\'est aujourd\'hui' : jours === 1 ? 'C\'est demain' : 'Plus que ' + jours + ' jours';
   const lignes = [['Code', '<b>' + h_(code) + '</b>'], ['Date', h_(CONFIG.DATE_AFFICHEE)], ['Lieu', h_(CONFIG.LIEU)]];
   if (CONFIG.HORAIRES) lignes.push(['Horaires', h_(CONFIG.HORAIRES)]);
-  if (type === 'cineconcert') lignes.push(['Places', String(l[t.col['Places']])]);
-  else lignes.push(['Masterclass', h_(String(l[t.col['Masterclass']]))]);
+  if (type === 'cineconcert') { lignes.push(['Places', String(l[t.col['Places']])]); lignes.push(['Ouverture des portes', '18h00']); }
+  else { lignes.push(['Masterclass', h_(String(l[t.col['Masterclass']]))]); lignes.push(['Horaire', horaireMasterclass_(String(l[t.col['Masterclass']]))]); }
 
   const oui = lienAction_(code, 'oui'), non = lienAction_(code, 'non');
   const boutons = oui ? '<p>' + bouton_(oui, 'Oui, je viens') + ' ' + bouton_(non, 'Je ne pourrai pas venir', true) + '</p>' : '';
@@ -413,10 +413,29 @@ function checkin_(code, cle) {
     const deja = String(l[t.col['Présent']] || '');
     if (deja) return Object.assign({ ok: true, etat: 'deja', heure: deja.replace(/^Oui\s*/, '') }, info, stats_(cle));
     f.feuille.getRange(f.numero, t.col['Présent'] + 1).setValue('Oui ' + Utilities.formatDate(new Date(), CONFIG.FUSEAU, 'dd/MM HH:mm'));
+    try { envoyerBienvenue_(f); } catch (err) { console.error('e-mail de bienvenue', err); }   // un e-mail qui échoue ne bloque jamais l'entrée
     return Object.assign({ ok: true, etat: 'ok' }, info, stats_(cle));
   } finally {
     verrou.releaseLock();
   }
+}
+
+/** E-mail envoyé à la personne au moment où son billet est scanné : « Bienvenue, profitez de l'événement ». */
+function envoyerBienvenue_(f) {
+  const l = f.ligne, t = f.t, prenom = String(l[t.col['Prénom']]), code = String(l[t.col['Code']]);
+  const mail = String(l[t.col['E-mail']] || '');
+  if (!mail) return;
+  const cine = f.type === 'cineconcert';
+  const lieu = cine ? 'au ciné-concert' : 'à la masterclass « ' + String(l[t.col['Masterclass']]) + ' »';
+  const intro = "Votre billet vient d'être validé à l'entrée : bienvenue " + lieu + " BOMLAAH. Profitez pleinement de l'événement !";
+  const lignes = [['Code', '<b>' + h_(code) + '</b>'], ['Lieu', h_(CONFIG.LIEU)]];
+  if (cine) lignes.push(['Places', String(Number(l[t.col['Places']]) || 1)]);
+  const avis = CONFIG.URL_SITE + 'avis/';
+  const html = gabarit_('Bienvenue, ' + prenom + ' !', '<p>' + h_(intro) + '</p>' + tableau_(lignes) +
+    "<p>Une fois l'événement terminé, dites-nous ce que vous en avez pensé (deux minutes) :</p><p>" + bouton_(avis, 'Donner mon avis', true) + '</p>');
+  const texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nCode : ' + code + '\nLieu : ' + CONFIG.LIEU +
+    "\n\nUne fois l'événement terminé, donnez-nous votre avis : " + avis + '\n\nBOMLAAH';
+  envoyer_(mail, 'Bienvenue à BOMLAAH · billet validé', texte, html);
 }
 
 /** Compteurs pour la page d'accueil : présents / réservations. */
