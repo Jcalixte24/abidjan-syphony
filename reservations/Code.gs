@@ -267,9 +267,18 @@ function notifierEquipe_(type, p, code, feuille) {
     ? tot.inscriptions + ' réservation(s), ' + tot.places + ' place(s) au total'
     : tot.inscriptions + ' personne(s) candidate(s) au total (une réservation par personne)';
   const lien = SpreadsheetApp.getActiveSpreadsheet().getUrl();
+  let validation = '', validationTexte = '';
+  if (type === 'masterclass') {      // l'équipe valide en un clic, depuis l'e-mail
+    const oui = lienValidation_(code, 'accepter'), non = lienValidation_(code, 'refuser');
+    if (oui) {
+      validation = '<p><b>Décision :</b></p><p>' + bouton_(oui, 'Accepter la candidature') + ' ' + bouton_(non, 'Refuser (avec motif)', true) + '</p>' +
+        '<p style="color:#555;font-size:13px">Accepter envoie son billet QR au candidat. Refuser demande un motif, envoyé au candidat.</p>';
+      validationTexte = '\n\nACCEPTER : ' + oui + '\nREFUSER : ' + non;
+    }
+  }
   const html = gabarit_('Nouvelle inscription', tableau_(lignes) +
-    '<p><b>Total à jour :</b> ' + h_(total) + '</p>' + bouton_(lien, 'Ouvrir la liste (Google Sheet)'));
-  const texte = sujet + '\n\n' + lignes.map(l => l[0] + ' : ' + l[1].replace(/<[^>]+>/g, '')).join('\n') + '\n\nTotal : ' + total + '\n' + lien;
+    '<p><b>Total à jour :</b> ' + h_(total) + '</p>' + validation + bouton_(lien, 'Ouvrir la liste (Google Sheet)', !!validation));
+  const texte = sujet + '\n\n' + lignes.map(l => l[0] + ' : ' + l[1].replace(/<[^>]+>/g, '')).join('\n') + '\n\nTotal : ' + total + validationTexte + '\n' + lien;
   envoyer_(CONFIG.EMAIL_EQUIPE, sujet, texte, html);
 }
 
@@ -349,6 +358,7 @@ function doGet(e) {
   if (a === 'checkin') return reponse_(checkin_(p.code, p.k), p.callback); // page « accueil » du site (JSONP)
   if (a === 'stats') return reponse_(stats_(p.k), p.callback);
   if (a === 'inscrire') return reponse_(inscrire_(p), p.callback);      // formulaire du site : le site lit la réponse (complet, fermé, doublon…)
+  if (a === 'accepter' || a === 'forcer' || a === 'refuser' || a === 'refuser_ok') return validationParLien_(a, p);   // boutons de l'e-mail d'alerte (jeton secret)
   if (a === 'avis') return reponse_(avis_(p), p.callback);               // page « avis » du site (QR code de fin de soirée)
   if (a === 'dispo') return reponse_(dispo_(), p.callback);               // places restantes du ciné-concert (public, aucune donnée personnelle)
   if (a === 'liste') return reponse_(liste_(p.k), p.callback);          // application organisateurs : tous les inscrits
@@ -621,6 +631,49 @@ function envoyerRefus_(f, motif) {
     '<p>Le ciné-concert du soir reste ouvert à tous sur réservation : ' + bouton_(CONFIG.URL_SITE + 'cineconcert/', 'Voir le ciné-concert', true) + '</p>');
   const texte = 'Bonjour ' + prenom + ',\n\n' + intro + '\n\nMotif : ' + motif + '\n\nLe ciné-concert du soir reste ouvert à tous sur réservation : ' + CONFIG.URL_SITE + 'cineconcert/\n\nCordialement,\nBOMLAAH';
   envoyer_(texte_(l[t.col['E-mail']]), 'Votre candidature à la masterclass · BOMLAAH', texte, html);
+}
+
+/** Jeton des liens de validation envoyés par e-mail : seul ce script peut le calculer (il dépend de la clé d'administration). */
+function jeton_(code, action) {
+  const octets = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(code) + '|' + action + '|' + CONFIG.CLE_ADMIN);
+  return octets.slice(0, 12).map(b => ('0' + (b & 255).toString(16)).slice(-2)).join('');
+}
+
+function lienValidation_(code, action) {
+  const url = ScriptApp.getService().getUrl();
+  return url && CONFIG.CLE_ADMIN ? url + '?a=' + action + '&code=' + encodeURIComponent(code) + '&t=' + jeton_(code, action) : '';
+}
+
+/** Page ouverte depuis le bouton « Accepter » ou « Refuser » de l'e-mail d'alerte. */
+function validationParLien_(a, p) {
+  const code = String(p.code || '').trim().toUpperCase();
+  const action = a === 'refuser_ok' ? 'refuser' : a;
+  if (!/^MC-[A-Z0-9]{6}$/.test(code) || String(p.t || '') !== jeton_(code, action)) return page_('Lien non valide', '<p>Ce lien de validation n\'est pas valide.</p>');
+  const f = trouverParCode_(code);
+  if (!f || f.type !== 'masterclass') return page_('Candidature introuvable', '<p>Cette candidature n\'existe plus.</p>');
+  const l = f.ligne, t = f.t, nom = String(l[t.col['Prénom']]) + ' ' + String(l[t.col['Nom']]), mc = String(l[t.col['Masterclass']]), statut = String(l[t.col['Statut']]);
+  if (statut !== 'Candidature') return page_('Déjà traité', '<p>La candidature de <b>' + h_(nom) + '</b> (' + h_(mc) + ') est déjà au statut « ' + h_(statut) + ' ».</p>');
+  if (a === 'accepter' || a === 'forcer') {
+    const r = changerStatut_(code, 'Retenu', CONFIG.CLE_ADMIN, '', a === 'forcer' ? '1' : '0');
+    if (r.ok) return page_('Candidature acceptée', '<p><b>' + h_(nom) + '</b> est retenu(e) pour « ' + h_(mc) + ' ».</p><p>Son billet QR vient de lui être envoyé par e-mail.</p>');
+    if (r.etat === 'complet') {
+      const forcer = lienValidation_(code, 'forcer');
+      return page_('Masterclass complète', '<p>« ' + h_(mc) + ' » a déjà ' + r.retenus + ' retenus sur ' + r.capacite + ' places.</p><p>' + (forcer ? bouton_(forcer, 'Accepter quand même') : '') + '</p>');
+    }
+    return page_('Action impossible', '<p>La candidature n\'a pas pu être acceptée. Utilisez l\'espace organisateurs.</p>');
+  }
+  if (a === 'refuser') {
+    const url = ScriptApp.getService().getUrl();
+    return page_('Refuser la candidature', '<p><b>' + h_(nom) + '</b> · ' + h_(mc) + '</p>' +
+      '<form method="get" action="' + h_(url) + '" target="_top"><input type="hidden" name="a" value="refuser_ok"><input type="hidden" name="code" value="' + h_(code) + '"><input type="hidden" name="t" value="' + h_(jeton_(code, 'refuser')) + '">' +
+      '<p><label>Motif du refus (obligatoire, envoyé au candidat)<br><textarea name="m" rows="4" required style="width:100%;box-sizing:border-box;padding:8px;font:inherit"></textarea></label></p>' +
+      '<button type="submit" style="background:#FFB347;color:#000;border:0;padding:10px 18px;border-radius:999px;font-weight:bold;font-size:15px">Refuser et envoyer le motif</button></form>');
+  }
+  const motif = texte_(p.m);
+  if (!motif) return page_('Motif obligatoire', '<p>Le refus demande un motif. Revenez en arrière et saisissez-le.</p>');
+  const r = changerStatut_(code, 'Refusé', CONFIG.CLE_ADMIN, motif, '0');
+  return r.ok ? page_('Candidature refusée', '<p>La candidature de <b>' + h_(nom) + '</b> est refusée. Le motif lui a été envoyé par e-mail.</p>')
+              : page_('Action impossible', '<p>Le refus n\'a pas pu être enregistré. Utilisez l\'espace organisateurs.</p>');
 }
 
 /** Annule un scan fait par erreur. */
