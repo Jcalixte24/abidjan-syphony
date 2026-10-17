@@ -1061,3 +1061,5 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 .hor{display:block;margin-top:.15rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;opacity:.7}
 .av-img{object-position:50% 20%}
 .av-img[src$="illman-toure.jpg"]{object-position:22% 20%}
+
+.pers-photo[src$="florent-galaty.jpg"],.av-img[src$="florent-galaty.jpg"]{object-position:50% 12%}
