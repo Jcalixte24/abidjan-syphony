@@ -868,10 +868,14 @@ function lienAction_(code, reponse) {
   return CONFIG.URL_SITE + 'valider/?a=' + reponse + '&code=' + encodeURIComponent(code);
 }
 
+/**
+ * Envoi d'un e-mail. On utilise GmailApp (et non MailApp) : les messages partent par les serveurs Gmail du compte, comme un message écrit à la main.
+ * Avec MailApp, Gmail refusait tous les messages vers des adresses @gmail.com (« Message rejected ») tant que le domaine était récent.
+ */
 function envoyer_(a, sujet, texte, html) {
-  const options = { to: a, subject: sujet, body: texte, htmlBody: html, name: CONFIG.NOM_EXPEDITEUR };
+  const options = { htmlBody: html, name: CONFIG.NOM_EXPEDITEUR };
   if (CONFIG.REPONDRE_A) options.replyTo = CONFIG.REPONDRE_A;
-  MailApp.sendEmail(options);
+  GmailApp.sendEmail(a, sujet, texte, options);
 }
 
 function texte_(v) { return String(v == null ? '' : v).trim().slice(0, 2000); }
