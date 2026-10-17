@@ -1042,3 +1042,22 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 .films{align-items:start}
 .cover.affiche{aspect-ratio:4/5}
 .film:nth-child(1) .cover.affiche img{object-position:50% 50%}
+
+/* retours client : boutons plus voyants, logo, horaires */
+.brand-logo{width:34px;height:34px;border-radius:10px;background:#fff;padding:3px;object-fit:contain}
+.pan-btn{display:inline-flex;align-items:center;gap:.8rem;align-self:flex-start;padding:.95rem 1.7rem;border-radius:999px;font-weight:700;font-size:1.02rem;box-shadow:0 14px 30px -14px rgba(0,0,0,.5);transition:transform .25s,box-shadow .25s}
+.pan-btn i{width:22px;height:2px;background:currentColor}
+.pan.matin .pan-btn{background:#3F1D7A;color:#fff}
+.pan.soir .pan-btn{background:var(--or);color:#1a1020}
+.pan:hover .pan-btn{transform:translateY(-2px);box-shadow:0 18px 36px -14px rgba(0,0,0,.6)}
+.pan:hover .pan-btn i{width:34px}
+.ins-liens{gap:1rem 1.4rem;margin:1.6rem 0 1.2rem}
+.ins-liens a{border:0;padding:1rem 1.9rem;border-radius:999px;font-weight:700;font-size:1.05rem;color:#fff;box-shadow:0 14px 30px -14px rgba(60,20,120,.55);transition:transform .25s,box-shadow .25s}
+.ins-liens a.b-mc{background:#3F1D7A}
+.ins-liens a.b-cc{background:var(--or);color:#1a1020}
+.ins-liens a:hover{transform:translateY(-2px);box-shadow:0 18px 36px -14px rgba(60,20,120,.7)}
+.ins-liens a i{width:24px;height:2px;background:currentColor}
+.ins-liens a:hover i{width:36px}
+.hor{display:block;margin-top:.15rem;font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;opacity:.7}
+.av-img{object-position:50% 20%}
+.av-img[src$="illman-toure.jpg"]{object-position:22% 20%}

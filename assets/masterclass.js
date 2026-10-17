@@ -42,9 +42,9 @@ const initiales = n => n.split(/\s+/).map(x => x[0]).join('').slice(0, 2).toUppe
     const t=THEMES[i];
     list.querySelectorAll('.theme-b').forEach((b,j)=>{b.setAttribute('aria-selected',j===i);b.tabIndex=j===i?0:-1;if(focus&&j===i)b.focus()});
     panel.setAttribute('aria-labelledby','th-'+t.id);
-    const who=t.intervenants.map(id=>INTER[id]).map(p=>`<li><span class="av" aria-hidden="true">${initiales(p.name)}</span><span><b>${p.name}</b><small>${p.role}</small></span></li>`).join('');
+    const who=t.intervenants.map(id=>INTER[id]).map(p=>`<li>${p.photo?`<img class="av-img" src="../${p.photo}" alt="" width="64" height="64" loading="lazy">`:`<span class="av" aria-hidden="true">${initiales(p.name)}</span>`}<span><b>${p.name}</b><small>${p.role}</small></span></li>`).join('');
     panel.innerHTML=`<div class="swap">${ART[t.art]}<span class="tag">${t.tag}</span><h3>${t.title}</h3><p>${t.text}</p><ul class="who">${who}</ul></div>
-      <div class="places"><div class="seats" aria-hidden="true">${Array.from({length:12},(_,k)=>seat.replace('<svg ',`<svg style="--i:${k}" `)).join('')}</div><div><b>12 places</b><small>Gratuit, sur inscription</small></div></div>
+      <div class="places"><div class="seats" aria-hidden="true">${Array.from({length:12},(_,k)=>seat.replace('<svg ',`<svg style="--i:${k}" `)).join('')}</div><div><b>12 places</b><small>Gratuit, sur inscription · ${t.horaire}</small></div></div>
       <a class="btn btn-or" href="../#inscription-masterclass-${t.id}">Candidater à cette masterclass</a>`;
   }
   list.addEventListener('click',e=>{const b=e.target.closest('.theme-b');if(!b)return;show([...list.querySelectorAll('.theme-b')].indexOf(b))});

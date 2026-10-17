@@ -186,7 +186,7 @@
 /* ================== INSCRIPTIONS ================== */
 (function(){
   const choices=document.getElementById('m-choices');
-  THEMES.forEach(t=>{const ch=document.createElement('label');ch.className='choice';ch.innerHTML=`<input type="radio" name="thematique" value="${t.title}" data-id="${t.id}" required><span>${t.title}</span>`;choices.appendChild(ch)});
+  THEMES.forEach(t=>{const ch=document.createElement('label');ch.className='choice';ch.innerHTML=`<input type="radio" name="thematique" value="${t.title}" data-id="${t.id}" required><span>${t.title}<small class="hor">${t.horaire}</small></span>`;choices.appendChild(ch)});
   const tabs=[...document.querySelectorAll('.tab')];
   const boxes={masterclass:document.getElementById('box-masterclass'),cineconcert:document.getElementById('box-cineconcert')};
   function openTab(id){
@@ -213,7 +213,7 @@
     const sel=document.getElementById('m-statut');if(!sel)return;
     const gEtu=document.getElementById('m-grp-etu'),gPro=document.getElementById('m-grp-pro');
     function maj(){
-      const etu=sel.value==='Étudiant(e)',pro=sel.value==='Professionnel(le) ou autre profil';
+      const etu=sel.value==='Étudiant(e)',pro=sel.value==='Professionnel(le)';
       gEtu.hidden=!etu;gPro.hidden=!pro;
       gEtu.querySelectorAll('input,select').forEach(i=>{i.disabled=!etu;i.required=etu&&i.dataset.req==='1'});
       gPro.querySelectorAll('input,select').forEach(i=>{i.disabled=!pro;i.required=pro&&i.dataset.req==='1'});
@@ -285,7 +285,7 @@
         err.textContent='Certains champs sont manquants ou incorrects : ils sont signalés en rouge.';err.hidden=false;return;
       }
       const d=Object.fromEntries(new FormData(form).entries());
-      d.humain='1';d.delai=String(Date.now()-(form._t0||Date.now()));
+      d.humain='1';d.droit_image='Oui';d.delai=String(Date.now()-(form._t0||Date.now()));
       const t=v=>String(v||'').trim();
       if(window.ASYM_API){reserver(key,d,{box,form,err,ok,wrap});return}
       const num=String(WHATSAPP[key]||'').replace(/\D/g,'');
@@ -336,4 +336,14 @@
     if(sel)[...sel.options].forEach(o=>{if(+o.value>n)o.remove()});
     if(n<=40&&note)note.textContent+=' Il reste '+n+' place'+(n>1?'s':'')+'.';
   });
+})();
+
+
+/* ciné-concert : « Autre » demande une précision */
+(function(){
+  const sel=document.getElementById('c-profil'),g=document.getElementById('c-grp-autre');if(!sel||!g)return;
+  const inp=g.querySelector('input');
+  function maj(){const a=/^autre/i.test(sel.value);g.hidden=!a;inp.disabled=!a;inp.required=a}
+  sel.addEventListener('change',maj);maj();
+  document.getElementById('form-cineconcert').addEventListener('reset',()=>setTimeout(maj));
 })();

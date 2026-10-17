@@ -52,7 +52,7 @@
 <header class="nav" id="nav">
   <div class="wrap nav-in">
     <a class="brand" href="#top" aria-label="BOMLAAH, accueil">
-      <svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="bi" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8B3DFF"/><stop offset="1" stop-color="#4B167D"/></linearGradient></defs><rect width="32" height="32" rx="10" fill="url(#bi)"/><g stroke="#FFB347" stroke-width="2.2" stroke-linecap="round"><path d="M9 13v6M13 9v14M17 12v8M21 7v18M25 13v6" transform="translate(-1.5 0)"/></g></svg>
+      <img class="brand-logo" src="logos/bomlaah-embleme.png" alt="" width="34" height="34">
       <span>BOMLAAH</span>
     </a>
     <div class="nav-r">
@@ -176,7 +176,7 @@
           <p>Pour les étudiants, amateurs et professionnels du cinéma, de l’audiovisuel et de la musique : découvrir les métiers, échanger, apprendre auprès d’intervenants de référence.</p>
           <p class="pan-n">Gratuite, sur inscription</p>
         </div>
-        <span class="pan-in">Découvrir les masterclass <i></i></span>
+        <span class="pan-in pan-btn">Découvrir les masterclass <i></i></span>
       </a>
       <a class="pan soir rv d1" href="cineconcert/">
         <svg class="pan-art" viewBox="0 0 160 160" aria-hidden="true">
@@ -194,7 +194,7 @@
           <p>Des courts métrages portés par 12 musiciens en live : une autre façon de vivre une œuvre, entre émotion, écoute et création.</p>
           <p class="pan-n">Gratuit, sur réservation</p>
         </div>
-        <span class="pan-in">Découvrir le ciné-concert <i></i></span>
+        <span class="pan-in pan-btn">Découvrir le ciné-concert <i></i></span>
       </a>
     </div>
 
@@ -267,7 +267,7 @@
             <div><dt>Date</dt><dd>Ven. 13.11.2026</dd></div>
             <div><dt>Lieu</dt><dd>YELAM’S, Treichville</dd></div>
             <div><dt>Le jour</dt><dd>Masterclass</dd></div>
-            <div><dt>Le soir</dt><dd>Ciné-concert</dd></div>
+            <div><dt>Le soir</dt><dd>Ciné-concert · portes à 18h00</dd></div>
           </dl>
         </div>
         <div class="t-stub"><span class="adm">Admit one</span><span class="bar"></span></div>
@@ -283,7 +283,7 @@
     <h2 class="rv d1">Ils soutiennent <em>BOMLAAH.</em></h2>
     <ul class="logos rv d2">
       <li class="logo-s"><img src="logos/matoo.png" alt="MATOO Association" width="354" height="110" loading="lazy"></li>
-      <li class="logo-s"><span class="wordmark">Agence EFFEES</span></li>
+      <li class="logo-s"><img src="logos/efees.png" alt="Agence EFFEES" width="420" height="420" loading="lazy"></li>
       <li class="logo-s"><img src="logos/yeshu-agency.png" alt="Yeshu Agency" width="420" height="195" loading="lazy"></li>
       <li class="logo-s"><img src="logos/booya-studios.png" alt="Booya Studios" width="420" height="158" loading="lazy"></li>
       <li class="logo-s"><img src="logos/insaac.png" alt="INSAAC, Institut National Supérieur des Arts et de l’Action Culturelle" width="283" height="167" loading="lazy"></li>
@@ -299,7 +299,7 @@
       <div class="cue">Inscriptions</div>
       <h2>Rejoignez <em>BOMLAAH.</em></h2>
       <p class="lead" style="margin-top:1.2rem">Masterclass ou ciné-concert, choisissez votre formulaire.</p>
-      <div class="ins-liens"><a href="masterclass/">Découvrir les masterclass <i></i></a><a href="cineconcert/">Découvrir le ciné-concert <i></i></a></div>
+      <div class="ins-liens"><a class="b-mc" href="masterclass/">Découvrir les masterclass <i></i></a><a class="b-cc" href="cineconcert/">Découvrir le ciné-concert <i></i></a></div>
       <div class="tabs" role="tablist" aria-label="Type d'inscription">
         <button class="tab" role="tab" id="tab-masterclass" aria-controls="box-masterclass" aria-selected="true" data-tab="masterclass">Masterclass</button>
         <button class="tab" role="tab" id="tab-cineconcert" aria-controls="box-cineconcert" aria-selected="false" data-tab="cineconcert">Ciné-concert</button>
@@ -317,7 +317,7 @@
           <div class="f"><label for="m-email">E-mail</label><input id="m-email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></div>
           <div class="f"><label for="m-tel">Téléphone</label><input id="m-tel" name="telephone" type="tel" required pattern="[+0-9 \(\)\.\-]{8,20}" autocomplete="tel" placeholder="+225 …"></div>
           <div class="f full"><label for="m-statut">Vous êtes</label>
-            <select id="m-statut" name="statut" required><option value="" selected disabled>Choisir</option><option>Étudiant(e)</option><option>Professionnel(le) ou autre profil</option></select></div>
+            <select id="m-statut" name="statut" required><option value="" selected disabled>Choisir</option><option>Étudiant(e)</option><option>Professionnel(le)</option><option>Amateur(e) de musique et de cinéma</option></select></div>
           <div class="grp" id="m-grp-etu" hidden>
             <div class="f"><label for="m-ecole">École ou établissement</label><input id="m-ecole" name="etablissement" data-req="1"></div>
             <div class="f"><label for="m-niveau">Filière et niveau</label><input id="m-niveau" name="niveau" data-req="1" placeholder="Ex. Cinéma, Licence 3"></div>
@@ -332,6 +332,9 @@
             <div class="choices" id="m-choices"></div>
           </fieldset>
           <div class="f full"><label for="m-motiv">Pourquoi cette masterclass ? <span style="opacity:.6">(facultatif)</span></label><textarea id="m-motiv" name="motivation" maxlength="500"></textarea></div>
+          <div class="f full"><label for="m-source">Où avez-vous entendu parler de l’événement ?</label>
+            <select id="m-source" name="source" required><option value="" selected disabled>Choisir</option><option>Réseaux sociaux</option><option>Bouche-à-oreille</option><option>Mon école ou mon établissement</option><option>Une structure partenaire</option><option>Affiche ou flyer</option><option>Presse, radio ou télévision</option><option>Autre</option></select></div>
+          <label class="check"><input type="checkbox" name="droit_image" required> J’autorise les organisateurs à utiliser mon image (photos et vidéos prises pendant l’événement) pour la communication de BOMLAAH.</label>
           <label class="check"><input type="checkbox" name="consent" required> J'accepte que mes informations servent à traiter ma candidature et à me contacter au sujet de l'événement.</label>
           <label class="check"><input type="checkbox" name="humain" required> Je ne suis pas un robot.</label>
           <div class="err" role="alert" hidden></div>
@@ -371,7 +374,12 @@
               <option>Amateur de cinéma</option>
               <option>Amateur de musique</option>
               <option>Entreprise ou institution</option>
+              <option>Autre (à préciser)</option>
             </select></div>
+          <div class="f full" id="c-grp-autre" hidden><label for="c-autre">Précisez votre profil</label><input id="c-autre" name="profil_autre" maxlength="80" disabled></div>
+          <div class="f full"><label for="c-source">Où avez-vous entendu parler de l’événement ?</label>
+            <select id="c-source" name="source" required><option value="" selected disabled>Choisir</option><option>Réseaux sociaux</option><option>Bouche-à-oreille</option><option>Mon école ou mon établissement</option><option>Une structure partenaire</option><option>Affiche ou flyer</option><option>Presse, radio ou télévision</option><option>Autre</option></select></div>
+          <label class="check"><input type="checkbox" name="droit_image" required> J’autorise les organisateurs à utiliser mon image (photos et vidéos prises pendant l’événement) pour la communication de BOMLAAH.</label>
           <label class="check"><input type="checkbox" name="consent" required> J'accepte que mes informations servent à traiter ma réservation et à me contacter au sujet de l'événement.</label>
           <label class="check"><input type="checkbox" name="humain" required> Je ne suis pas un robot.</label>
           <div class="err" role="alert" hidden></div>

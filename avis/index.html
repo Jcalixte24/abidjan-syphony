@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#101018">
+<title>Votre avis · BOMLAAH</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--noir:#000;--orange:#FFB347;--violet:#8B3DFF;--gris:#8F889E;--blanc:#fff;--sans:'Open Sans',system-ui,sans-serif;--disp:'Montserrat',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh;background:radial-gradient(80% 50% at 50% 100%,rgba(255,179,71,.22),transparent 70%),radial-gradient(60% 40% at 10% 0%,rgba(139,61,255,.3),transparent 70%),#0C0A14;color:#fff;font-family:var(--sans);line-height:1.55;display:flex;flex-direction:column;align-items:center;padding:28px 18px 48px}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--orange);outline-offset:3px;border-radius:3px}
+.marque{display:flex;align-items:center;gap:.7rem;font-family:var(--disp);font-weight:800;font-size:1.5rem;letter-spacing:-.02em;text-decoration:none;margin-bottom:6px}
+.marque img{width:38px;height:38px;border-radius:11px;background:#fff;padding:3px;object-fit:contain}
+.marque i{color:var(--orange);font-weight:700}
+.sous{font-family:var(--disp);font-weight:600;font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;color:#B5B5B5;margin-bottom:22px;text-align:center}
+.carte{width:100%;max-width:560px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:26px;padding:clamp(1.3rem,4vw,2rem)}
+h1{font-family:var(--disp);font-weight:800;font-size:clamp(1.7rem,6vw,2.3rem);line-height:1.1;letter-spacing:-.02em}
+h1 em{font-style:italic;color:var(--orange)}
+.intro{margin-top:.7rem;color:#D8D3E4}
+fieldset{border:0;margin-top:1.6rem}
+legend,label.t{font-family:var(--disp);font-weight:700;font-size:1rem;display:block;margin-bottom:.55rem}
+.etoiles{display:flex;gap:.5rem;justify-content:space-between}
+.etoiles label{flex:1;position:relative}
+.etoiles input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.etoiles span{display:grid;place-items:center;height:58px;border-radius:16px;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.04);font-family:var(--disp);font-weight:800;font-size:1.3rem;transition:background .2s,transform .2s,border-color .2s}
+.etoiles input:checked+span{background:var(--orange);color:#000;border-color:var(--orange);transform:translateY(-2px)}
+.etoiles input:focus-visible+span{outline:2px solid #fff;outline-offset:2px}
+.legende{display:flex;justify-content:space-between;font-size:.82rem;color:#B5B5B5;margin-top:.45rem}
+.champ{margin-top:1.3rem}
+textarea,input[type=text],input[type=email]{width:100%;font:400 1rem var(--sans);color:#fff;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:.85rem 1rem;min-height:48px}
+textarea{min-height:96px;resize:vertical}
+::placeholder{color:#8F889E}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.opt{font-weight:400;opacity:.65;font-size:.85rem}
+.btn{margin-top:1.8rem;width:100%;font:800 1.05rem var(--disp);min-height:54px;padding:.9rem 1.4rem;border-radius:999px;border:0;cursor:pointer;background:var(--orange);color:#000;transition:transform .2s}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.6;cursor:wait}
+.err{margin-top:1rem;color:#FFB3A8;font-size:.95rem}
+.merci{text-align:center;padding:1rem 0}
+.merci svg{width:72px;height:72px;margin-bottom:.8rem}
+.merci h1{margin-bottom:.6rem}
+.piege{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.retour{display:inline-block;margin-top:1.4rem;color:var(--orange);font-weight:700;text-decoration:none}
+[hidden]{display:none!important}
+@media (max-width:480px){.deux{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<a class="marque" href="../"><img src="../logos/bomlaah-embleme.png" alt="" width="38" height="38">BOM<i>LAAH</i></a>
+<p class="sous">13 novembre 2026 · Abidjan</p>
+
+<main class="carte">
+  <form id="f" novalidate>
+    <h1>Votre avis <em>compte.</em></h1>
+    <p class="intro">Merci d’avoir partagé cette soirée avec nous. Dites-nous en deux minutes ce que vous en avez pensé : cela nous aide à faire mieux pour la prochaine édition.</p>
+
+    <fieldset>
+      <legend>Votre note globale</legend>
+      <div class="etoiles" role="radiogroup" aria-label="Note de 1 à 5">
+        <label><input type="radio" name="note" value="1" required><span>1</span></label>
+        <label><input type="radio" name="note" value="2"><span>2</span></label>
+        <label><input type="radio" name="note" value="3"><span>3</span></label>
+        <label><input type="radio" name="note" value="4"><span>4</span></label>
+        <label><input type="radio" name="note" value="5"><span>5</span></label>
+      </div>
+      <div class="legende"><span>Décevant</span><span>Exceptionnel</span></div>
+    </fieldset>
+
+    <div class="champ"><label class="t" for="aime">Ce que vous avez aimé</label><textarea id="aime" name="aime" maxlength="1000" placeholder="La musique, les films, l’ambiance, l’accueil…"></textarea></div>
+    <div class="champ"><label class="t" for="ameliorer">Ce que nous pourrions améliorer</label><textarea id="ameliorer" name="ameliorer" maxlength="1000" placeholder="L’organisation, le son, l’attente, le lieu…"></textarea></div>
+    <div class="champ"><label class="t" for="message">Un mot pour l’équipe <span class="opt">(facultatif)</span></label><textarea id="message" name="message" maxlength="1000"></textarea></div>
+
+    <div class="champ deux">
+      <div><label class="t" for="nom">Votre nom <span class="opt">(facultatif)</span></label><input type="text" id="nom" name="nom" maxlength="120" autocomplete="name"></div>
+      <div><label class="t" for="email">E-mail <span class="opt">(facultatif)</span></label><input type="email" id="email" name="email" maxlength="120" autocomplete="email" placeholder="si vous voulez être recontacté"></div>
+    </div>
+
+    <div class="piege" aria-hidden="true"><label>Ne pas remplir <input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>
+    <div class="err" id="err" role="alert" hidden></div>
+    <button class="btn" id="envoi" type="submit">Envoyer mon avis</button>
+  </form>
+
+  <div class="merci" id="merci" hidden>
+    <svg viewBox="0 0 64 64" fill="none" stroke="#FFB347" stroke-width="2.4" aria-hidden="true"><circle cx="32" cy="32" r="29"/><path d="M19 33l9 9 17-20" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>Merci <em>!</em></h1>
+    <p class="intro">Votre avis est bien enregistré. À très bientôt pour la suite de BOMLAAH.</p>
+    <a class="retour" href="../">Retour au site</a>
+  </div>
+</main>
+
+<script src="../config.js"></script>
+<script src="../lib/asym.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var t0 = Date.now(), f = $('f'), err = $('err'), btn = $('envoi');
+  function erreur(m) { err.textContent = m; err.hidden = false; }
+  f.addEventListener('submit', function (e) {
+    e.preventDefault(); err.hidden = true;
+    var note = (f.querySelector('input[name=note]:checked') || {}).value;
+    if (!note) { erreur('Choisissez une note de 1 à 5.'); return; }
+    var api = window.ASYM_API || '';
+    if (!api) { erreur('Le service d’avis n’est pas disponible pour le moment. Merci de réessayer plus tard.'); return; }
+    var p = { a: 'avis', note: note, aime: f.aime.value, ameliorer: f.ameliorer.value, message: f.message.value, nom: f.nom.value, email: f.email.value, _gotcha: f._gotcha.value, delai: String(Date.now() - t0) };
+    btn.disabled = true; btn.textContent = 'Envoi en cours…';
+    ASYM.jsonp(api + '?' + new URLSearchParams(p).toString(), function (r) {
+      btn.disabled = false; btn.textContent = 'Envoyer mon avis';
+      if (r && r.ok) { f.hidden = true; $('merci').hidden = false; window.scrollTo(0, 0); return; }
+      erreur(r && r.erreur === 'trop_de_demandes' ? 'Beaucoup de personnes répondent en même temps. Patientez une minute puis réessayez.' : 'Votre avis n’a pas pu être envoyé. Vérifiez votre connexion puis réessayez.');
+    }, function () {
+      btn.disabled = false; btn.textContent = 'Envoyer mon avis';
+      erreur('Votre avis n’a pas pu être envoyé. Vérifiez votre connexion puis réessayez.');
+    });
+  });
+})();
+</script>
+</body>
+</html>
