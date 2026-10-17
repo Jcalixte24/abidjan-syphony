@@ -353,7 +353,7 @@ function envoyerRappel_(type, t, l, jours) {
 function doGet(e) {
   const p = (e && e.parameter) || {};
   const a = p.a || '';
-  if (a === 'oui' || a === 'non') return presence_(p);               // liens des e-mails (page HTML)
+  if (a === 'oui' || a === 'non') return presence_(p);               // liens des e-mails de rappel (via la page /valider/ du site)
   if (a === 'billet') return reponse_(billet_(p.code), p.callback);      // page « billet » du site (JSONP)
   if (a === 'checkin') return reponse_(checkin_(p.code, p.k), p.callback); // page « accueil » du site (JSONP)
   if (a === 'stats') return reponse_(stats_(p.k), p.callback);
@@ -441,12 +441,12 @@ function stats_(cle) {
 /** Lien « Je viens / Je ne viens pas » d'un e-mail de rappel. */
 function presence_(p) {
   const rep = p.a === 'non' ? 'non' : 'oui';
-  if (!p.code) return page_('Lien incomplet', '<p>Ce lien est incomplet. Répondez directement à notre e-mail.</p>');
+  if (!p.code) return sortie_('Lien incomplet', '<p>Ce lien est incomplet. Répondez directement à notre e-mail.</p>', p);
   const trouve = trouverParCode_(String(p.code).trim().toUpperCase());
-  if (!trouve) return page_('Code introuvable', '<p>Nous ne retrouvons pas cette réservation. Répondez directement à notre e-mail.</p>');
+  if (!trouve) return sortie_('Code introuvable', '<p>Nous ne retrouvons pas cette réservation. Répondez directement à notre e-mail.</p>', p);
   const statut = trouve.ligne[trouve.t.col['Statut']];
   if (['Inscrit', 'Confirmé', 'Retenu', 'Annulé'].indexOf(statut) === -1) {
-    return page_('Dossier en cours', '<p>Votre dossier est en cours d\'étude. Nous vous écrirons très bientôt.</p>');
+    return sortie_('Dossier en cours', '<p>Votre dossier est en cours d\'étude. Nous vous écrirons très bientôt.</p>', p);
   }
   const nouveau = rep === 'oui' ? 'Confirmé' : 'Annulé';
   trouve.feuille.getRange(trouve.numero, trouve.t.col['Statut'] + 1).setValue(nouveau);
@@ -458,8 +458,8 @@ function presence_(p) {
       gabarit_('Annulation', '<p>' + h_(nom) + ' ne pourra pas venir (code ' + h_(code) + ').</p><p>La ligne est passée au statut « Annulé ».</p>'));
   }
   return rep === 'oui'
-    ? page_('Merci, à bientôt', '<p>Votre présence est confirmée pour le ' + h_(CONFIG.DATE_AFFICHEE) + ' à ' + h_(CONFIG.LIEU) + '.</p><p>Votre billet : ' + bouton_(lienBillet_(code), 'Voir mon billet (QR code)') + '</p>')
-    : page_('C\'est noté', '<p>Merci de nous avoir prévenus : votre place est libérée.</p>');
+    ? page_('Merci, à bientôt', '<p>Votre présence est confirmée pour le ' + h_(CONFIG.DATE_AFFICHEE) + ' à ' + h_(CONFIG.LIEU) + '.</p><p>Votre billet : ' + bouton_(lienBillet_(code), 'Voir mon billet (QR code)') + '</p>', p)
+    : page_('C\'est noté', '<p>Merci de nous avoir prévenus : votre place est libérée.</p>', p);
 }
 
 function trouverParCode_(code) {
@@ -639,41 +639,45 @@ function jeton_(code, action) {
   return octets.slice(0, 12).map(b => ('0' + (b & 255).toString(16)).slice(-2)).join('');
 }
 
+/** Lien placé dans les e-mails : il ouvre une page du site, qui appelle ensuite le script (Gmail rejette les e-mails qui contiennent des liens directs vers un script Google). */
 function lienValidation_(code, action) {
-  const url = ScriptApp.getService().getUrl();
-  return url && CONFIG.CLE_ADMIN ? url + '?a=' + action + '&code=' + encodeURIComponent(code) + '&t=' + jeton_(code, action) : '';
+  return CONFIG.CLE_ADMIN ? CONFIG.URL_SITE + 'valider/?a=' + action + '&code=' + encodeURIComponent(code) + '&t=' + jeton_(code, action) : '';
+}
+
+/** Réponse d'une page de validation : JSONP { titre, corps } pour la page du site, ou page HTML classique. */
+function sortie_(titre, corps, p) {
+  return p && p.callback ? reponse_({ ok: true, titre: titre, corps: corps }, p.callback) : page_(titre, corps);
 }
 
 /** Page ouverte depuis le bouton « Accepter » ou « Refuser » de l'e-mail d'alerte. */
 function validationParLien_(a, p) {
   const code = String(p.code || '').trim().toUpperCase();
   const action = a === 'refuser_ok' ? 'refuser' : a;
-  if (!/^MC-[A-Z0-9]{6}$/.test(code) || String(p.t || '') !== jeton_(code, action)) return page_('Lien non valide', '<p>Ce lien de validation n\'est pas valide.</p>');
+  if (!/^MC-[A-Z0-9]{6}$/.test(code) || String(p.t || '') !== jeton_(code, action)) return sortie_('Lien non valide', '<p>Ce lien de validation n\'est pas valide.</p>', p);
   const f = trouverParCode_(code);
-  if (!f || f.type !== 'masterclass') return page_('Candidature introuvable', '<p>Cette candidature n\'existe plus.</p>');
+  if (!f || f.type !== 'masterclass') return sortie_('Candidature introuvable', '<p>Cette candidature n\'existe plus.</p>', p);
   const l = f.ligne, t = f.t, nom = String(l[t.col['Prénom']]) + ' ' + String(l[t.col['Nom']]), mc = String(l[t.col['Masterclass']]), statut = String(l[t.col['Statut']]);
-  if (statut !== 'Candidature') return page_('Déjà traité', '<p>La candidature de <b>' + h_(nom) + '</b> (' + h_(mc) + ') est déjà au statut « ' + h_(statut) + ' ».</p>');
+  if (statut !== 'Candidature') return sortie_('Déjà traité', '<p>La candidature de <b>' + h_(nom) + '</b> (' + h_(mc) + ') est déjà au statut « ' + h_(statut) + ' ».</p>', p);
   if (a === 'accepter' || a === 'forcer') {
     const r = changerStatut_(code, 'Retenu', CONFIG.CLE_ADMIN, '', a === 'forcer' ? '1' : '0');
-    if (r.ok) return page_('Candidature acceptée', '<p><b>' + h_(nom) + '</b> est retenu(e) pour « ' + h_(mc) + ' ».</p><p>Son billet QR vient de lui être envoyé par e-mail.</p>');
+    if (r.ok) return sortie_('Candidature acceptée', '<p><b>' + h_(nom) + '</b> est retenu(e) pour « ' + h_(mc) + ' ».</p><p>Son billet QR vient de lui être envoyé par e-mail.</p>', p);
     if (r.etat === 'complet') {
       const forcer = lienValidation_(code, 'forcer');
-      return page_('Masterclass complète', '<p>« ' + h_(mc) + ' » a déjà ' + r.retenus + ' retenus sur ' + r.capacite + ' places.</p><p>' + (forcer ? bouton_(forcer, 'Accepter quand même') : '') + '</p>');
+      return sortie_('Masterclass complète', '<p>« ' + h_(mc) + ' » a déjà ' + r.retenus + ' retenus sur ' + r.capacite + ' places.</p><p>' + (forcer ? bouton_(forcer, 'Accepter quand même') : '') + '</p>', p);
     }
-    return page_('Action impossible', '<p>La candidature n\'a pas pu être acceptée. Utilisez l\'espace organisateurs.</p>');
+    return sortie_('Action impossible', '<p>La candidature n\'a pas pu être acceptée. Utilisez l\'espace organisateurs.</p>', p);
   }
   if (a === 'refuser') {
-    const url = ScriptApp.getService().getUrl();
-    return page_('Refuser la candidature', '<p><b>' + h_(nom) + '</b> · ' + h_(mc) + '</p>' +
-      '<form method="get" action="' + h_(url) + '" target="_top"><input type="hidden" name="a" value="refuser_ok"><input type="hidden" name="code" value="' + h_(code) + '"><input type="hidden" name="t" value="' + h_(jeton_(code, 'refuser')) + '">' +
+    return sortie_('Refuser la candidature', '<p><b>' + h_(nom) + '</b> · ' + h_(mc) + '</p>' +
+      '<form method="get" action="' + h_(CONFIG.URL_SITE + 'valider/') + '"><input type="hidden" name="a" value="refuser_ok"><input type="hidden" name="code" value="' + h_(code) + '"><input type="hidden" name="t" value="' + h_(jeton_(code, 'refuser')) + '">' +
       '<p><label>Motif du refus (obligatoire, envoyé au candidat)<br><textarea name="m" rows="4" required style="width:100%;box-sizing:border-box;padding:8px;font:inherit"></textarea></label></p>' +
-      '<button type="submit" style="background:#FFB347;color:#000;border:0;padding:10px 18px;border-radius:999px;font-weight:bold;font-size:15px">Refuser et envoyer le motif</button></form>');
+      '<button type="submit" style="background:#FFB347;color:#000;border:0;padding:10px 18px;border-radius:999px;font-weight:bold;font-size:15px">Refuser et envoyer le motif</button></form>', p);
   }
   const motif = texte_(p.m);
-  if (!motif) return page_('Motif obligatoire', '<p>Le refus demande un motif. Revenez en arrière et saisissez-le.</p>');
+  if (!motif) return sortie_('Motif obligatoire', '<p>Le refus demande un motif. Revenez en arrière et saisissez-le.</p>', p);
   const r = changerStatut_(code, 'Refusé', CONFIG.CLE_ADMIN, motif, '0');
-  return r.ok ? page_('Candidature refusée', '<p>La candidature de <b>' + h_(nom) + '</b> est refusée. Le motif lui a été envoyé par e-mail.</p>')
-              : page_('Action impossible', '<p>Le refus n\'a pas pu être enregistré. Utilisez l\'espace organisateurs.</p>');
+  return r.ok ? sortie_('Candidature refusée', '<p>La candidature de <b>' + h_(nom) + '</b> est refusée. Le motif lui a été envoyé par e-mail.</p>', p)
+              : sortie_('Action impossible', '<p>Le refus n\'a pas pu être enregistré. Utilisez l\'espace organisateurs.</p>', p);
 }
 
 /** Annule un scan fait par erreur. */
@@ -861,8 +865,7 @@ function genererCode_(prefixe, existants) {
 }
 
 function lienAction_(code, reponse) {
-  const url = ScriptApp.getService().getUrl();
-  return url ? url + '?a=' + reponse + '&code=' + encodeURIComponent(code) : '';
+  return CONFIG.URL_SITE + 'valider/?a=' + reponse + '&code=' + encodeURIComponent(code);
 }
 
 function envoyer_(a, sujet, texte, html) {

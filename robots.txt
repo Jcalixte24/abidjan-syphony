@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
+Disallow: /valider/
+Disallow: /avis/
+Disallow: /billet/
 
 Sitemap: https://bomlaah.com/sitemap.xml

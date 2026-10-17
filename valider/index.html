@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#101018">
+<title>BOMLAAH</title>
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;1,700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--orange:#F4A94E;--sans:'Open Sans',system-ui,sans-serif;--disp:'Montserrat',system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;min-height:100dvh;background:radial-gradient(80% 50% at 50% 100%,rgba(244,169,78,.22),transparent 70%),radial-gradient(60% 40% at 10% 0%,rgba(110,106,214,.3),transparent 70%),#0C0A14;color:#fff;font-family:var(--sans);line-height:1.55;display:flex;flex-direction:column;align-items:center;padding:28px 18px 48px}
+.marque{display:flex;align-items:center;gap:.7rem;font-family:var(--disp);font-weight:800;font-size:1.5rem;letter-spacing:-.02em;text-decoration:none;color:#fff;margin-bottom:22px}
+.marque img{width:38px;height:38px;border-radius:11px;background:#fff;padding:3px;object-fit:contain}
+.marque i{color:var(--orange);font-weight:700}
+.carte{width:100%;max-width:520px;background:#fff;color:#111;border-radius:22px;padding:clamp(1.3rem,4vw,2rem);box-shadow:0 30px 80px rgba(0,0,0,.55)}
+h1{font-family:var(--disp);font-weight:800;font-size:1.5rem;line-height:1.2;margin-bottom:.8rem}
+.carte p{margin-top:.7rem;color:#333}
+.carte a{display:inline-block;margin-top:.8rem;background:var(--orange);color:#000;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:700}
+textarea{width:100%;font:inherit;padding:10px;border:1px solid #bbb;border-radius:10px;margin-top:.4rem}
+button{margin-top:.8rem;background:var(--orange);color:#000;border:0;padding:12px 20px;border-radius:999px;font:700 1rem var(--disp);cursor:pointer}
+.attente{color:#666}
+</style>
+</head>
+<body>
+<a class="marque" href="../"><img src="../logos/bomlaah-embleme.png" alt="" width="38" height="38">BOM<i>LAAH</i></a>
+<main class="carte" id="carte"><h1>Un instant…</h1><p class="attente">Traitement en cours.</p></main>
+<script src="../config.js"></script>
+<script src="../lib/asym.js"></script>
+<script>
+(function () {
+  var q = new URLSearchParams(location.search), a = q.get('a') || '', code = q.get('code') || '';
+  var carte = document.getElementById('carte');
+  function montrer(titre, corps) {
+    carte.innerHTML = '';
+    var h = document.createElement('h1'); h.textContent = titre; carte.appendChild(h);
+    var d = document.createElement('div'); d.innerHTML = corps; carte.appendChild(d);   // texte produit par notre propre script
+    document.title = titre + ' · BOMLAAH';
+  }
+  if (['accepter', 'forcer', 'refuser', 'refuser_ok', 'oui', 'non'].indexOf(a) === -1 || !code) { montrer('Lien non valide', '<p>Ce lien n\'est pas valide ou est incomplet.</p>'); return; }
+  var api = window.ASYM_API || '';
+  if (!api) { montrer('Service indisponible', '<p>Réessayez dans quelques instants.</p>'); return; }
+  var p = { a: a, code: code };
+  if (q.get('t')) p.t = q.get('t');
+  if (q.get('m')) p.m = q.get('m');
+  ASYM.jsonp(api + '?' + new URLSearchParams(p).toString(), function (r) {
+    if (r && r.titre) montrer(r.titre, r.corps || ''); else montrer('Action impossible', '<p>Le serveur n\'a pas pu traiter ce lien. Réessayez ou utilisez l\'espace organisateurs.</p>');
+  }, function () { montrer('Pas de réseau', '<p>Vérifiez votre connexion puis rouvrez le lien de l\'e-mail.</p>'); });
+})();
+</script>
+</body>
+</html>
