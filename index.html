@@ -238,15 +238,13 @@
       <article class="porteur rv">
         <img class="p-logo" src="logos/myll-production.png" alt="MYLL Production" width="150" height="108" loading="lazy">
         <div>
-          <span class="tag">Production</span>
           <h3>MYLL Production</h3>
-          <p>MYLL Production est une entreprise de production phonographique ivoirienne. Depuis 2021, MYLL Production travaille activement aux côtés d’artistes (Morijah, GapC, Etser…), d’entreprises et de marques (VINCI Group, GNA Assurances, BBL Energy…) dans la création et la réalisation de leur univers sonore (identité sonore, bande originale de films institutionnels…).</p>
+          <p>Entreprise de production phonographique ivoirienne fondée en 2021, MYLL Production conçoit et produit l’univers sonore des entreprises et des marques. Son expertise s’étend de la création d’identités sonores à la réalisation de bandes originales pour des films. Aujourd’hui, MYLL Production s’inscrit dans une vision de structuration et de création de valeur dans les Industries culturelles et créatives.</p>
         </div>
       </article>
       <article class="porteur rv d1">
         <img class="p-logo p-yel" src="logos/yelams-couleur.png" alt="YELAM’S Créative" width="188" height="76" loading="lazy">
         <div>
-          <span class="tag">Coproduction</span>
           <h3>YELAM’S Créative</h3>
           <p>YELAM’S Créative est un écosystème culturel, artistique et audiovisuel dédié à la création, à la production, à la diffusion et à la valorisation des expressions artistiques. À travers ses activités de programmation, de formation, de professionnalisation et d’accompagnement des talents, YELAM’S contribue au développement des industries culturelles et créatives en Côte d’Ivoire, tout en favorisant l’émergence de nouveaux talents, l’accès à la culture et les collaborations entre acteurs du secteur.</p>
         </div>
@@ -317,10 +315,13 @@
           <div class="f"><label for="m-email">E-mail</label><input id="m-email" name="email" type="email" required autocomplete="email" placeholder="vous@exemple.com"></div>
           <div class="f"><label for="m-tel">Téléphone</label><input id="m-tel" name="telephone" type="tel" required pattern="[+0-9 \(\)\.\-]{8,20}" autocomplete="tel" placeholder="+225 …"></div>
           <div class="f full"><label for="m-statut">Vous êtes</label>
-            <select id="m-statut" name="statut" required><option value="" selected disabled>Choisir</option><option>Étudiant(e)</option><option>Professionnel(le)</option><option>Amateur(e) de musique et de cinéma</option></select></div>
+            <select id="m-statut" name="statut" required><option value="" selected disabled>Choisir</option><option>Étudiant(e)</option><option>Professionnel(le)</option><option>Amateur(e) de musique et de cinéma</option><option>Autre (à préciser)</option></select></div>
           <div class="grp" id="m-grp-etu" hidden>
             <div class="f"><label for="m-ecole">École ou établissement</label><input id="m-ecole" name="etablissement" data-req="1"></div>
             <div class="f"><label for="m-niveau">Filière et niveau</label><input id="m-niveau" name="niveau" data-req="1" placeholder="Ex. Cinéma, Licence 3"></div>
+          </div>
+          <div class="grp" id="m-grp-autre" hidden>
+            <div class="f full"><label for="m-autre">Précisez</label><input id="m-autre" name="profil" maxlength="80" data-req="1"></div>
           </div>
           <div class="grp" id="m-grp-pro" hidden>
             <div class="f"><label for="m-profil">Votre profil</label>

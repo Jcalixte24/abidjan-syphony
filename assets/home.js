@@ -211,10 +211,12 @@
   // masterclass : étudiant ou autre profil
   (function(){
     const sel=document.getElementById('m-statut');if(!sel)return;
-    const gEtu=document.getElementById('m-grp-etu'),gPro=document.getElementById('m-grp-pro');
+    const gEtu=document.getElementById('m-grp-etu'),gPro=document.getElementById('m-grp-pro'),gAutre=document.getElementById('m-grp-autre');
     function maj(){
       const etu=sel.value==='Étudiant(e)',pro=sel.value==='Professionnel(le)';
-      gEtu.hidden=!etu;gPro.hidden=!pro;
+      const autre=/^Autre/.test(sel.value);
+      gEtu.hidden=!etu;gPro.hidden=!pro;gAutre.hidden=!autre;
+      gAutre.querySelectorAll('input').forEach(i=>{i.disabled=!autre;i.required=autre&&i.dataset.req==='1'});
       gEtu.querySelectorAll('input,select').forEach(i=>{i.disabled=!etu;i.required=etu&&i.dataset.req==='1'});
       gPro.querySelectorAll('input,select').forEach(i=>{i.disabled=!pro;i.required=pro&&i.dataset.req==='1'});
     }
