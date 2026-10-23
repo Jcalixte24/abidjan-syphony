@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://bomlaah.com/</loc><lastmod>2026-10-14</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://bomlaah.com/masterclass/</loc><lastmod>2026-10-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://bomlaah.com/cineconcert/</loc><lastmod>2026-10-14</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url><loc>https://bomlaah.com/</loc><lastmod>2026-10-23</lastmod><changefreq>weekly</changefreq><priority>1.0</priority><image:image><image:loc>https://bomlaah.com/og-image.png</image:loc><image:title>BOMLAAH, quand l’image parle, la musique raconte</image:title></image:image></url>
+  <url><loc>https://bomlaah.com/masterclass/</loc><lastmod>2026-10-23</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://bomlaah.com/cineconcert/</loc><lastmod>2026-10-23</lastmod><changefreq>weekly</changefreq><priority>0.8</priority><image:image><image:loc>https://bomlaah.com/img/affiche-kids-see-ghosts.jpg</image:loc><image:title>Kids See Ghosts, un film de Daniel Thalmas</image:title></image:image></url>
 </urlset>
