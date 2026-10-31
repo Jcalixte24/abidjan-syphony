@@ -84,3 +84,19 @@
   box.innerHTML=out;
   new IntersectionObserver((es,o)=>es.forEach(e=>{if(e.isIntersecting){box.classList.add('on');o.disconnect()}}),{threshold:.3}).observe(box);
 })();
+
+/* ================== LES MUSICIENS (portraits + biographies) ================== */
+(function(){
+  const box=document.getElementById('musiciens-liste');
+  if(!box||typeof MUSICIENS==='undefined'||!MUSICIENS.length)return;
+  const esc=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const ini=n=>n.split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('mus-bientot').hidden=true;
+  box.innerHTML=MUSICIENS.map(m=>{
+    const pic=m.photo?`<img class="pers-photo" src="../${esc(m.photo)}" alt="${esc(m.name)}" width="640" height="800" loading="lazy">`:`<span class="pers-photo pers-init" aria-hidden="true">${esc(ini(m.name))}</span>`;
+    const bio=(m.bio&&m.bio.length)?`<details class="bio"><summary>Biographie</summary>${m.bio.map(x=>`<p>${esc(x)}</p>`).join('')}</details>`:'';
+    return `<article class="pers rv">${pic}<div class="pers-txt"><h3>${esc(m.name)}</h3><p class="role">${esc(m.role||'')}</p>${bio}</div></article>`;
+  }).join('');
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.08});
+  box.querySelectorAll('.rv').forEach((el,i)=>{el.style.transitionDelay=(i%3)*.08+'s';io.observe(el)});
+})();
