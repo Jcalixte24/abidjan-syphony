@@ -998,7 +998,7 @@ select{background-repeat:no-repeat;background-position:right 1rem center;backgro
 /* fiches intervenants : portrait + biographie dépliable */
 .team{grid-template-columns:repeat(3,1fr);align-items:start}
 .pers{flex-direction:column;gap:0;padding:0;overflow:hidden;align-items:stretch}
-.pers-photo{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;object-position:50% 20%;border-radius:0;background:var(--clair-2)}
+.pers-photo{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:50% 20%;border-radius:0;background:var(--clair-2)}
 .pers-init{display:grid;place-items:center;background:linear-gradient(150deg,var(--elec),var(--brun));color:#fff;font-family:var(--disp);font-weight:800;font-size:3.4rem;letter-spacing:-.02em}
 .pers-txt{padding:1.2rem 1.4rem 1.4rem}
 .pers h3{font-size:1.3rem}
