@@ -20,7 +20,7 @@
     <path d="M20 300 A260 260 0 0 1 540 300 Z" fill="url(#spot)"/>
     <path d="M20 300 A260 260 0 0 1 540 300" fill="none" stroke="rgba(139,61,255,.35)" stroke-dasharray="3 6"/>
     <path d="M10 304H550" stroke="rgba(75,22,125,.25)"/>`;
-  const rows=[{n:5,r:108},{n:7,r:205}];let k=0;
+  const rows=[{n:5,r:108},{n:8,r:205}];let k=0;
   rows.forEach(row=>{for(let i=0;i<row.n;i++){
     const a=Math.PI*(1-(i+.5)/row.n),x=CX+row.r*Math.cos(a),y=CY-row.r*Math.sin(a)*.95;
     // pupitre orienté vers le chef
@@ -41,7 +41,7 @@
   svg.innerHTML=out;
   const mus=[...svg.querySelectorAll('.mus')];
   // chaque pupitre a sa note (accord de la mineur 9 réparti du grave à l'aigu)
-  const NOTE=[45,52,57,60,64,48,55,59,62,67,69,72];
+  const NOTE=[45,52,57,60,64,48,55,59,62,67,69,72,76];
   function play(i,vol=.34){
     const g=mus[i];g.classList.remove('hit');void g.getBBox();g.classList.add('hit');
     if(AU.ctx)tone(midi(NOTE[i]),{vol,dur:2.4,type:i<5?'sine':'triangle'});
